@@ -5,11 +5,11 @@
   <option value="ดึก">ดึก</option>
 </select>
 <input type="text" id="name" placeholder="ชื่อของคุณ">
-<button onclick="sendData()">บันทึกลง Google Sheets</button>
+<button onclick="sendData()">บันทึกลง Google Sheets v1 </button>
 
 <script>
   function sendData() {
-    const url = "https://script.google.com/macros/s/AKfycbyI16jLrIDaMgRoeaQOgzjqDM_R33JE6WajPcCflUgmCfiyCrTyKCm3jI0zFlSEheoX/exec";
+    const url = "https://script.google.com/macros/library/d/1-MYvD1XaCzDTy_WcynldF5k5bo5B7NfNcNqs7nPb3H8BbOAR7V1TwLI7/2";
     const payload = {
       date: document.getElementById('date').value,
       shift: document.getElementById('shift').value,
