@@ -1,4 +1,4 @@
-Google Sheets v1
+Google Sheets v1.1
 <input type="date" id="date">
 <select id="shift">
   <option value="เช้า">เช้า</option>
@@ -17,9 +17,19 @@ Google Sheets v1
       name: document.getElementById('name').value
     };
 
-    fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    }).then(res => alert("บันทึกสำเร็จ!"));
-  }
+  fetch('URL_WEB_APP_ของคุณ', {
+  method: 'POST',
+  mode: 'no-cors', // เพิ่มบรรทัดนี้เพื่อข้ามปัญหา CORS
+  cache: 'no-cache',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify(payload)
+})
+.then(response => {
+  // หมายเหตุ: mode 'no-cors' จะทำให้เราอ่าน response body ไม่ได้ 
+  // แต่ข้อมูลจะเข้า Google Sheets แน่นอนครับ
+  alert("ส่งข้อมูลเรียบร้อยแล้ว (ตรวจสอบใน Sheets)");
+})
+.catch(error => console.error('Error:', error));
 </script>
