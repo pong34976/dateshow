@@ -1,0 +1,24 @@
+<input type="date" id="date">
+<select id="shift">
+  <option value="เช้า">เช้า</option>
+  <option value="บ่าย">บ่าย</option>
+  <option value="ดึก">ดึก</option>
+</select>
+<input type="text" id="name" placeholder="ชื่อของคุณ">
+<button onclick="sendData()">บันทึกลง Google Sheets</button>
+
+<script>
+  function sendData() {
+    const url = "URL_WEB_APP_ที่ได้จาก_APPS_SCRIPT";
+    const payload = {
+      date: document.getElementById('date').value,
+      shift: document.getElementById('shift').value,
+      name: document.getElementById('name').value
+    };
+
+    fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).then(res => alert("บันทึกสำเร็จ!"));
+  }
+</script>
