@@ -216,8 +216,9 @@
       color: var(--hdr-txt);
       opacity: .85;
       text-decoration: none;
-      cursor: default;
+      cursor: pointer;
     }
+    .leg-chip:hover { opacity: 1; transform: scale(1.05); }
 
     .leg-dot { width: 11px; height: 11px; border-radius: 50%; }
 
@@ -540,10 +541,10 @@
       <span class="badge">เช้า · บ่าย · ดึก</span>
     </div>
     <div class="legend">
-      <span class="leg-chip"><div class="leg-dot" style="background:var(--c-joe)"></div>โจ้</span>
-      <span class="leg-chip"><div class="leg-dot" style="background:var(--c-wan)"></div>ว่าน</span>
-      <span class="leg-chip"><div class="leg-dot" style="background:var(--c-flook)"></div>ฟลุ๊ค</span>
-      <span class="leg-chip"><div class="leg-dot" style="background:var(--c-ae)"></div>เอ้</span>
+      <a href="view.html?u=joe" class="leg-chip" title="ดูเวร โจ้"><div class="leg-dot" style="background:var(--c-joe)"></div>โจ้</a>
+      <a href="view.html?u=wan" class="leg-chip" title="ดูเวร ว่าน"><div class="leg-dot" style="background:var(--c-wan)"></div>ว่าน</a>
+      <a href="view.html?u=flook" class="leg-chip" title="ดูเวร ฟลุ๊ค"><div class="leg-dot" style="background:var(--c-flook)"></div>ฟลุ๊ค</a>
+      <a href="view.html?u=ae" class="leg-chip" title="ดูเวร เอ้"><div class="leg-dot" style="background:var(--c-ae)"></div>เอ้</a>
     </div>
     <div class="theme-bar">
       <span class="theme-label">🎨</span>
