@@ -8,7 +8,7 @@
 </head>
 
 <body>
-  <h2>Google Sheets v1.3</h2>
+  <h2>Google Sheets v1.3.1</h2>
   <input type="date" id="date">
   <select id="shift">
     <option value="เช้า">เช้า</option>
@@ -20,7 +20,7 @@
 
   <script>
     function sendData() {
-      const url = "https://script.google.com/macros/s/AKfycbzT8aLoF7xsqrPJUMSRgWoj0KQ3CGtr6q3gLp3a5Nk/exec";
+      const url = "https://script.googleusercontent.com/macros/echo?user_content_key=AWDtjMUJXG7VKJMbOWTJjzCHPGVq9QkVOMS63_0dLJn_eFZNinGwGMXi-Q5EaSFAyvVwqR_53sy6xyNhvJmBs1pSol92nmg2wYOJNrxnzJjflmKJjU6q7G38-WKo5LbUzuitwTvw9oNzEr3HI1wj0KjuoW9cuqFdbD-v1ihCqc_qjzGaQReDC48a2DhThi0C82r1G8iXVTOfiPfVKoe11K9UZVP7xh2aKl-8E2eAECQn7gRCp0a8Hozff2rPoIne1g&lib=MEOv3JjNEKzbvTk2bfihMwj06qvbBDE65";
       const payload = {
         date: document.getElementById('date').value,
         shift: document.getElementById('shift').value,
