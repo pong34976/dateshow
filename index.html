@@ -1,35 +1,47 @@
-Google Sheets v1.2 <br>
-<input type="date" id="date">
-<select id="shift">
-  <option value="เช้า">เช้า</option>
-  <option value="บ่าย">บ่าย</option>
-  <option value="ดึก">ดึก</option>
-</select>
-<input type="text" id="name" placeholder="ชื่อของคุณ">
-<button onclick="sendData()">บันทึกลง Google Sheets v1 </button>
+<!DOCTYPE html>
+<html lang="th">
 
-<script>
-  function sendData() {
-    const url = "https://script.google.com/macros/s/AKfycbzT8aLoF7xsqrPJUMSRgWoj0KQ3CGtr6q3gLp3a5Nk/dev";
-    const payload = {
-      date: document.getElementById('date').value,
-      shift: document.getElementById('shift').value,
-      name: document.getElementById('name').value
-    };
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Sheets </title>
+</head>
 
-  fetch('URL_WEB_APP_ของคุณ', {
-  method: 'POST',
-  mode: 'no-cors', // เพิ่มบรรทัดนี้เพื่อข้ามปัญหา CORS
-  cache: 'no-cache',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify(payload)
-})
-.then(response => {
-  // หมายเหตุ: mode 'no-cors' จะทำให้เราอ่าน response body ไม่ได้ 
-  // แต่ข้อมูลจะเข้า Google Sheets แน่นอนครับ
-  alert("ส่งข้อมูลเรียบร้อยแล้ว (ตรวจสอบใน Sheets)");
-})
-.catch(error => console.error('Error:', error));
-</script>
+<body>
+  <h2>Google Sheets v1.3</h2>
+  <input type="date" id="date">
+  <select id="shift">
+    <option value="เช้า">เช้า</option>
+    <option value="บ่าย">บ่าย</option>
+    <option value="ดึก">ดึก</option>
+  </select>
+  <input type="text" id="name" placeholder="ชื่อของคุณ">
+  <button onclick="sendData()">บันทึกลง Google Sheets</button>
+
+  <script>
+    function sendData() {
+      const url = "https://script.google.com/macros/s/AKfycbzT8aLoF7xsqrPJUMSRgWoj0KQ3CGtr6q3gLp3a5Nk/exec";
+      const payload = {
+        date: document.getElementById('date').value,
+        shift: document.getElementById('shift').value,
+        name: document.getElementById('name').value
+      };
+
+      fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        cache: 'no-cache',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(() => {
+          alert("ส่งข้อมูลเรียบร้อยแล้ว (ตรวจสอบใน Sheets)");
+        })
+        .catch(error => console.error('Error:', error));
+    }
+  </script>
+</body>
+
+</html>
