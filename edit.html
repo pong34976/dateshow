@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>ระบบเวร - แดชบอร์ด</title>
+  <title>จัดการเวร (Edit)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap"
     rel="stylesheet" />
@@ -36,6 +36,8 @@
       --sat: #80b0ff;
       --shadow: 0 8px 40px rgba(0, 0, 0, .55);
       --radius: 18px;
+      --modal-bg: #1a1530;
+      --modal-shadow: 0 20px 60px rgba(0, 0, 0, .7);
     }
 
     .t-coffee {
@@ -54,6 +56,7 @@
       --today-ring: #ff5722;
       --sun: #ff5252;
       --sat: #64b5f6;
+      --modal-bg: #2b1f1a;
     }
 
     .t-dark {
@@ -72,6 +75,7 @@
       --today-ring: #00bcd4;
       --sun: #ff1744;
       --sat: #2979ff;
+      --modal-bg: #0a0a0a;
     }
 
     .t-candy {
@@ -90,24 +94,38 @@
       --today-ring: #ff1744;
       --sun: #ff1744;
       --sat: #f50057;
+      --modal-bg: #3d0d25;
     }
 
     .t-paper {
-      --bg: #fdfaf0;
-      --bg2: linear-gradient(135deg, #ffffff, #f2ead3);
-      --hdr: rgba(93, 64, 55, 0.08);
-      --hdr-txt: #3e2723;
-      --day-lbl: #5d4037;
-      --txt: #261a15;
-      --cell: rgba(255, 255, 255, 0.9);
-      --cell-hov: rgba(93, 64, 55, 0.1);
-      --border: #d7ccc8;
-      --nav: rgba(93, 64, 55, 0.12);
-      --nav-hov: rgba(93, 64, 55, 0.25);
-      --accent: #8d6e63;
-      --today-ring: #bf360c;
-      --sun: #d32f2f;
-      --sat: #1976d2;
+      --bg: #f8f4e6;
+      --bg2: linear-gradient(135deg, #fdfbf7, #e0d8c3);
+      --hdr: rgba(120, 80, 40, .12);
+      --hdr-txt: #2a1a08;
+      --day-lbl: rgba(120, 80, 40, .7);
+      --cell: rgba(255, 255, 255, .7);
+      --cell-hov: rgba(120, 80, 40, .08);
+      --border: rgba(120, 80, 40, .2);
+      --txt: #1a1005;
+      --nav: rgba(120, 80, 40, .15);
+      --nav-hov: rgba(120, 80, 40, .3);
+      --accent: #5d4037;
+      --today-ring: #5d4037;
+      --sun: #b71c1c;
+      --sat: #0d47a1;
+      --modal-bg: #f0eadd;
+      --m-txt: #e65100;
+      --m-bg: rgba(230, 81, 0, .15);
+      --m-slot: rgba(230, 81, 0, .08);
+      --m-border: rgba(230, 81, 0, .2);
+      --a-txt: #bf360c;
+      --a-bg: rgba(191, 54, 12, .15);
+      --a-slot: rgba(191, 54, 12, .08);
+      --a-border: rgba(191, 54, 12, .2);
+      --n-txt: #0d47a1;
+      --n-bg: rgba(13, 71, 161, .15);
+      --n-slot: rgba(13, 71, 161, .08);
+      --n-border: rgba(13, 71, 161, .2);
     }
 
     :root {
@@ -115,8 +133,10 @@
       --c-wan: #34d399;
       --c-flook: #60a5fa;
       --c-ae: #fbbf24;
-      --btn-edit: #ff4081;
+      --c-empty: rgba(255, 255, 255, 0.2);
     }
+
+    .t-paper { --c-empty: rgba(0, 0, 0, .4) }
 
     body {
       font-family: 'Sarabun', sans-serif;
@@ -198,26 +218,9 @@
       text-decoration: none;
       cursor: pointer;
     }
-
     .leg-chip:hover { opacity: 1; transform: scale(1.05); }
 
     .leg-dot { width: 11px; height: 11px; border-radius: 50%; }
-
-    .btn-action {
-      padding: 6px 14px;
-      background: var(--btn-edit);
-      color: #fff;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.85rem;
-      border-radius: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      transition: transform 0.2s;
-      display: inline-block;
-    }
-    .btn-action:hover {
-      transform: scale(1.05);
-    }
 
     .calendar {
       width: 100%;
@@ -344,7 +347,6 @@
       flex-shrink: 0;
       color: var(--txt);
       transition: background .2s, color .2s;
-      margin-bottom: 4px;
     }
 
     .cal-cell.is-today .day-num {
@@ -357,20 +359,168 @@
     .cal-cell.is-sat .day-num { color: var(--sat); }
     .cal-cell.other-month .day-num { color: var(--txt); }
 
-    .shifts { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .shifts { display: flex; flex-direction: column; gap: 3px; flex: 1; }
 
-    /* Custom colored shift slots for dashboard */
-    .view-shift {
+    .shift-group { display: flex; flex-direction: column; gap: 2px; }
+
+    .shift-group-header {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 5px 1px;
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: .3px;
+      border-radius: 6px 6px 0 0;
+      opacity: .75;
+    }
+
+    .shift-slot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 6px;
+      border-radius: 0 0 6px 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-top: none;
+      transition: filter .15s, transform .1s;
+      font-size: .78rem;
+      min-height: 24px;
+    }
+
+    .shift-slot:first-of-type { border-radius: 6px; }
+    .shift-slot + .shift-slot { border-radius: 0 0 6px 6px; margin-top: 1px; }
+    .shift-slot:hover { filter: brightness(1.3); transform: scale(1.03); }
+
+    .slot-num { font-size: .6rem; opacity: .5; flex-shrink: 0; width: 10px; }
+
+    .shift-name {
+      flex: 1;
+      text-align: right;
+      font-weight: 700;
+      font-size: .78rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sg-morning .shift-group-header { background: var(--m-bg, rgba(255, 220, 100, .12)); color: var(--txt); }
+    .sg-morning .shift-slot { background: var(--m-slot, rgba(255, 220, 100, .07)); border-color: var(--m-border, rgba(255, 220, 100, .14)); color: var(--txt); }
+    .sg-afternoon .shift-group-header { background: var(--a-bg, rgba(255, 140, 60, .12)); color: var(--txt); }
+    .sg-afternoon .shift-slot { background: var(--a-slot, rgba(255, 140, 60, .07)); border-color: var(--a-border, rgba(255, 140, 60, .14)); color: var(--txt); }
+    .sg-night .shift-group-header { background: var(--n-bg, rgba(100, 140, 255, .12)); color: var(--txt); }
+    .sg-night .shift-slot { background: var(--n-slot, rgba(100, 140, 255, .07)); border-color: var(--n-border, rgba(100, 140, 255, .14)); color: var(--txt); }
+
+    .name-joe { color: var(--c-joe); }
+    .name-wan { color: var(--c-wan); }
+    .name-flook { color: var(--c-flook); }
+    .name-ae { color: var(--c-ae); }
+    .name-empty { color: var(--c-empty); }
+
+    .loading-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      z-index: 9999;
+      animation: loading-anim 1.2s linear infinite;
+    }
+
+    @keyframes loading-anim {
+      0% { transform: translateX(-100%) }
+      100% { transform: translateX(100%) }
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .65);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 6px 4px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.88rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1000;
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
     }
+
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--modal-bg, #1a1530);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 32px;
+      min-width: 280px;
+      max-width: 340px;
+      width: 90%;
+      box-shadow: var(--modal-shadow);
+      transform: translateY(20px) scale(.97);
+      transition: transform .25s ease;
+    }
+
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+    .modal-title { font-size: 1rem; font-weight: 700; color: var(--hdr-txt); margin-bottom: 6px; }
+    .modal-sub { font-size: .82rem; color: var(--day-lbl); margin-bottom: 20px; }
+
+    .staff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+
+    .staff-btn {
+      padding: 12px 8px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      font-family: 'Sarabun', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, border-color .15s;
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .staff-btn:hover { transform: scale(1.06); box-shadow: 0 4px 16px rgba(0, 0, 0, .4); }
+    .staff-btn.joe { color: var(--c-joe); border-color: var(--c-joe); }
+    .staff-btn.wan { color: var(--c-wan); border-color: var(--c-wan); }
+    .staff-btn.flook { color: var(--c-flook); border-color: var(--c-flook); }
+    .staff-btn.ae { color: var(--c-ae); border-color: var(--c-ae); }
+    .staff-btn.clear { color: var(--day-lbl); border-color: var(--border); grid-column: 1/-1; font-size: .85rem; }
+
+    .modal-close {
+      width: 100%;
+      padding: 9px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      color: var(--day-lbl);
+      font-family: 'Sarabun', sans-serif;
+      font-size: .85rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .modal-close:hover { background: rgba(255, 255, 255, .12); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: .88rem;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+      transition: transform .3s ease, opacity .3s;
+      opacity: 0;
+      z-index: 2000;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
     .cal-cell.is-sun, .cal-cell.is-holiday { background: rgba(255, 107, 107, 0.05); }
     .cal-cell.is-sat { background: rgba(128, 176, 255, 0.05); }
@@ -383,10 +533,14 @@
 
 <body>
 
+  <div class="loading-bar" id="loadingBar" style="display:none"></div>
+
   <div class="topbar">
     <div class="app-title">
-      📋 ระบบเวร
-      <span class="badge">แดชบอร์ดรวม</span>
+      <a href="index.html" style="text-decoration:none; margin-right:8px; display:inline-block; transform:scale(1.2);"
+        title="กลับหน้าหลัก">🔙</a>
+      📋 จัดการเวร
+      <span class="badge">แก้ไข</span>
     </div>
     <div class="legend">
       <a href="view.html?u=joe" class="leg-chip" title="ดูเวร โจ้"><div class="leg-dot" style="background:var(--c-joe)"></div>โจ้</a>
@@ -395,8 +549,7 @@
       <a href="view.html?u=ae" class="leg-chip" title="ดูเวร เอ้"><div class="leg-dot" style="background:var(--c-ae)"></div>เอ้</a>
     </div>
     <div class="theme-bar">
-      <a href="edit.html" class="btn-action">✏️ จัดการเวร</a>
-      <span class="theme-label" style="margin-left: 8px;">🎨</span>
+      <span class="theme-label">🎨</span>
       <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic"></div>
       <div class="swatch" data-theme="paper" style="background:linear-gradient(135deg,#795548,#f0ebe1)" title="Paper"></div>
       <div class="swatch" data-theme="coffee" style="background:linear-gradient(135deg,#3d2b1f,#1c140d)" title="Coffee"></div>
@@ -426,8 +579,30 @@
     <div class="cal-grid" id="calGrid"></div>
   </div>
 
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">เลือกผู้รับเวร</div>
+      <div class="modal-sub" id="modalSub"></div>
+      <div class="staff-grid">
+        <button class="staff-btn joe" onclick="assign('โจ้')">👤 โจ้</button>
+        <button class="staff-btn wan" onclick="assign('ว่าน')">👤 ว่าน</button>
+        <button class="staff-btn flook" onclick="assign('ฟลุ๊ค')">👤 ฟลุ๊ค</button>
+        <button class="staff-btn ae" onclick="assign('เอ้')">👤 เอ้</button>
+        <button class="staff-btn clear" onclick="assign('')">🗑 ล้างออก</button>
+      </div>
+      <button class="modal-close" onclick="closeModal()">ยกเลิก</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
   <script>
+    // =====================================================
+    //  ⚙️  CONFIG – Google Sheets API
+    // =====================================================
+    const GS_URL = "https://script.google.com/macros/s/AKfycbxhYd-zD7f8SsWsGNcOWUHZI_94IZUqHFFa8lE2Ugv2PHYHDctqzPycBYKu4zp9Ol0P/exec";
     const STORAGE_KEY = 'dutyMap_v1';
+    // =====================================================
 
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -436,12 +611,16 @@
       { key: 'บ่าย', cls: 'afternoon', icon: '☀️', slots: 2 },
       { key: 'ดึก', cls: 'night', icon: '🌙', slots: 1 },
     ];
+    const STAFF_CLASS = { 'โจ้': 'joe', 'ว่าน': 'wan', 'ฟลุ๊ค': 'flook', 'เอ้': 'ae' };
 
     const TODAY = new Date();
     let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
 
-    // โหลดข้อมูลจาก localStorage ไม่ใช่ MySQL
+    // โหลดจาก localStorage หรือเริ่มว่าง
     let dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+    // Modal state
+    let modalDate = '', modalShift = '', modalSlot = 1;
 
     function fmtDate(d) {
       const y = d.getFullYear();
@@ -451,7 +630,30 @@
     }
     function dutyKey(date, shift, slot) { return `${date}|${shift}|${slot}`; }
 
-    // ─── Build Calendar Grid ─────────────────────────────
+    function setLoading(on) {
+      document.getElementById('loadingBar').style.display = on ? 'block' : 'none';
+    }
+    function showToast(msg, isErr = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = isErr ? '#e53935' : 'var(--accent)';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    // บันทึกลง localStorage
+    function saveLocal() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dutyMap));
+    }
+
+    // บันทึกลง Google Sheets (แบบ GET)
+    function saveToSheets(date, shift, slot, name) {
+      const params = new URLSearchParams({ date, shift, slot, name });
+      fetch(GS_URL + '?' + params.toString(), { mode: 'no-cors' })
+        .catch(err => console.warn('Sheets sync failed:', err));
+    }
+
+    // ─── Build Calendar Grid ─────────────────────────────────────────────
     function buildGrid(year, month) {
       const grid = document.getElementById('calGrid');
       grid.style.animation = 'none';
@@ -499,9 +701,6 @@
       const num = document.createElement('div');
       num.className = 'day-num';
       num.textContent = dayNum;
-      if (otherMonth) {
-          num.style.opacity = '0.5';
-      }
       cell.appendChild(num);
 
       const dateStr = fmtDate(dateObj);
@@ -509,51 +708,79 @@
       const shiftsDiv = document.createElement('div');
       shiftsDiv.className = 'shifts';
 
-      // 🛑 SHOW ALL ASSIGNED SHIFTS WITH HIGH CONTRAST BLOCK 🛑
-      let hasAnyShift = false;
       SHIFTS.forEach(({ key, cls, icon, slots }) => {
         const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
         if (key === 'เช้า' && !isWeekend) return;
 
-        let bgColor = '';
-        let textColor = '#fff';
-        let textShadow = '';
+        const group = document.createElement('div');
+        group.className = `shift-group sg-${cls}`;
 
-        // Applying requested colors: เช้า = สีเหลือง, บ่าย = สีส้ม, ดึก = สีฟ้าโทนมืด
-        if (key === 'เช้า') { 
-            bgColor = '#fdd835'; // Yellow
-            textColor = '#3e2723'; // Dark brown/black for contrast
-        } 
-        else if (key === 'บ่าย') { 
-            bgColor = '#f57c00'; // Orange
-            textColor = '#fff';
-            textShadow = '0 1px 2px rgba(0,0,0,0.5)';
-        } 
-        else if (key === 'ดึก') { 
-            bgColor = '#0d47a1'; // Dark Blue 
-            textColor = '#fff';
-            textShadow = '0 1px 2px rgba(0,0,0,0.5)';
-        }
+        const hdr = document.createElement('div');
+        hdr.className = 'shift-group-header';
+        hdr.innerHTML = `<span>${icon}</span><span>${key}</span>`;
+        group.appendChild(hdr);
 
         for (let s = 1; s <= slots; s++) {
           const name = dutyMap[dutyKey(dateStr, key, s)] || '';
-          if (name) {
-            hasAnyShift = true;
-            const html = `
-              <a href="view.html?u=${name}" class="view-shift" style="background: ${bgColor}; color: ${textColor}; text-shadow: ${textShadow}; text-decoration: none; margin-bottom: 4px;" title="${key} - ${name}">
-                <span>${icon} ${name}</span>
-              </a>
-            `;
-            shiftsDiv.insertAdjacentHTML('beforeend', html);
+          const staffCls = name ? (STAFF_CLASS[name] || '') : 'empty';
+          const slot = document.createElement('div');
+          slot.className = 'shift-slot';
+          slot.setAttribute('role', 'button');
+          slot.setAttribute('tabindex', otherMonth ? '-1' : '0');
+          slot.innerHTML = `
+            <span class="slot-num">${slots > 1 ? s : ''}</span>
+            <span class="shift-name name-${staffCls}">${name || '–'}</span>
+          `;
+          if (!otherMonth) {
+            const _s = s;
+            slot.addEventListener('click', () => openModal(dateStr, key, _s, dateObj));
+          } else {
+            slot.style.cursor = 'default';
           }
+          group.appendChild(slot);
         }
+
+        shiftsDiv.appendChild(group);
       });
 
       cell.appendChild(shiftsDiv);
       grid.appendChild(cell);
     }
 
-    // ─── Nav buttons ─────────────────────────────────────
+    // ─── Modal ────────────────────────────────────────────
+    function openModal(date, shift, slot, dateObj) {
+      modalDate = date;
+      modalShift = shift;
+      modalSlot = slot;
+      const shiftDef = SHIFTS.find(s => s.key === shift);
+      const thaiDate = `${dateObj.getDate()} ${THAI_MONTHS[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+      const slotTxt = shiftDef.slots > 1 ? ` (ช่อง ${slot})` : '';
+      document.getElementById('modalTitle').textContent = `${shiftDef.icon} เวร${shift}${slotTxt}`;
+      document.getElementById('modalSub').textContent = thaiDate;
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    function assign(name) {
+      closeModal();
+      const key = dutyKey(modalDate, modalShift, modalSlot);
+      if (name === '') {
+        delete dutyMap[key];
+      } else {
+        dutyMap[key] = name;
+      }
+      saveLocal();
+      saveToSheets(modalDate, modalShift, modalSlot, name);
+      buildGrid(current.getFullYear(), current.getMonth());
+      showToast(name ? `✅ บันทึก ${name} – ${modalShift}` : `🗑 ลบเวร ${modalShift}`);
+    }
+
+    document.getElementById('modalOverlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
     document.getElementById('btnPrev').addEventListener('click', () => {
       current.setMonth(current.getMonth() - 1);
       buildGrid(current.getFullYear(), current.getMonth());
