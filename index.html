@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google Sheets v1.3.4</title>
+  <title>Google Sheets v1.4</title>
 </head>
 
 <body>
-  <h2>Google Sheets v1.3.4</h2>
+  <h2>Google Sheets v1.4</h2>
   <input type="date" id="date">
   <select id="shift">
     <option value="เช้า">เช้า</option>
@@ -21,17 +21,13 @@
   <script>
     function sendData() {
       const url = "https://script.google.com/macros/s/AKfycbyDCsDQJf5prCfLAa3KqIKDxxwPkJaYB-pjAXrhVUkMD-q5kAnmYG6YVwBpGscq5h3R/exec";
-      const payload = {
+      const params = new URLSearchParams({
         date: document.getElementById('date').value,
         shift: document.getElementById('shift').value,
         name: document.getElementById('name').value
-      };
+      });
 
-      fetch(url, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify(payload)
-      })
+      fetch(url + '?' + params.toString(), { mode: 'no-cors' })
         .then(() => {
           alert("ส่งข้อมูลเรียบร้อยแล้ว (ตรวจสอบใน Sheets)");
         })
