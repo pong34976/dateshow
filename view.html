@@ -530,8 +530,9 @@
     const TODAY = new Date();
     let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
 
-    // โหลดข้อมูลจาก localStorage ไม่ใช่ MySQL
+    // โหลดข้อมูลจาก localStorage
     let dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    let swapMap = JSON.parse(localStorage.getItem('swapMap_v1') || '{}');
 
     function fmtDate(d) {
       const y = d.getFullYear();
@@ -606,14 +607,32 @@
           let html = '';
 
           for (let s = 1; s <= slots; s++) {
-            const name = dutyMap[dutyKey(dateStr, key, s)] || '';
-            if (name === targetName) {
+            const dk = dutyKey(dateStr, key, s);
+            const originalName = dutyMap[dk] || '';
+            const swapEntry = swapMap[dk];
+            
+            // Effective owner: if swapped, the requester owns it. if not, originalName owns it.
+            const effectiveOwner = swapEntry ? swapEntry.requester : originalName;
+
+            if (effectiveOwner === targetName) {
               hasDuty = true;
-              html += `
-                <div class="shift-slot big-shift-slot" style="cursor:default; height:100%; min-height:55px; display:flex; align-items:center; justify-content:center; border-radius: 8px; margin-top: 5px;">
-                  <span style="font-size:1.6rem; font-weight:800;">${key}</span>
-                </div>
-              `;
+              
+              if (swapEntry) {
+                // This shift was received via swap
+                html += `
+                  <div class="shift-slot big-shift-slot" style="cursor:default; height:100%; min-height:55px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius: 8px; margin-top: 5px; position:relative;">
+                    <span style="position:absolute; top:2px; right:4px; font-size:0.55rem; background:#00897b; color:#fff; padding:1px 4px; border-radius:4px; font-weight:700;">แลกเวร</span>
+                    <span style="font-size:1.6rem; font-weight:800;">${key}</span>
+                  </div>
+                `;
+              } else {
+                // Normal duty
+                html += `
+                  <div class="shift-slot big-shift-slot" style="cursor:default; height:100%; min-height:55px; display:flex; align-items:center; justify-content:center; border-radius: 8px; margin-top: 5px;">
+                    <span style="font-size:1.6rem; font-weight:800;">${key}</span>
+                  </div>
+                `;
+              }
             }
           }
 

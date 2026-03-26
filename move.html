@@ -1024,7 +1024,7 @@
           <th>ช่อง</th>
           <th>ชื่อ (เดิม)</th>
           <th>ผู้ขอแลก</th>
-          <th>บันทึกเมื่อ</th>
+          <th>ยกเลิก</th>
         </tr>
       </thead>
       <tbody id="logBody"></tbody>
@@ -1336,19 +1336,34 @@
 
     /* ─── Swap log ─── */
     function renderLog() {
-      const entries = Object.values(swapMap);
       const logEl = document.getElementById('swapLog');
-      const body = document.getElementById('logBody');
-      if (!entries.length) { logEl.style.display = 'none'; return; }
-
+      const body  = document.getElementById('logBody');
+      const allEntries = Object.entries(swapMap);
+      if (!allEntries.length) { logEl.style.display = 'none'; return; }
       logEl.style.display = 'block';
-      // Sort newest first
-      entries.sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
-      body.innerHTML = entries.map(e => {
+
+      // Group into paired swaps (same savedAt, both sides)
+      const seen = new Set();
+      const pairs = [];
+      allEntries.forEach(([dk, e]) => {
+        if (seen.has(dk)) return;
+        const partner = allEntries.find(([dk2, e2]) =>
+          !seen.has(dk2) && dk2 !== dk &&
+          e2.original === e.requester && e2.requester === e.original
+        );
+        const pairDk = partner ? partner[0] : null;
+        seen.add(dk);
+        if (partner) seen.add(pairDk);
+        pairs.push({ dk, e, pairDk });
+      });
+      pairs.sort((a, b) => (b.e.savedAt || '').localeCompare(a.e.savedAt || ''));
+
+      body.innerHTML = pairs.map(({ dk, e, pairDk }) => {
         const d = new Date(e.date);
-        const thaiDate = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`;
+        const thaiDate  = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
         const slotLabel = e.slot > 1 ? e.slot : '–';
-        const savedAt = e.savedAt ? new Date(e.savedAt).toLocaleString('th-TH') : '';
+        const savedAt   = e.savedAt ? new Date(e.savedAt).toLocaleString('th-TH') : '';
+        const cancelDks = pairDk ? `${dk}||${pairDk}` : dk;
         return `<tr>
           <td>${thaiDate}</td>
           <td>${e.shift}</td>
@@ -1356,9 +1371,29 @@
           <td>${slotLabel}</td>
           <td><span style="text-decoration:line-through;opacity:.6;">${e.original}</span></td>
           <td><strong style="color:#4db6ac;">${e.requester}</strong> <span class="tag-swap">แลก</span></td>
-          <td style="color:var(--day-lbl);font-size:.78rem;">${savedAt}</td>
+          <td>
+            <button onclick="cancelSwap('${CSS.escape(cancelDks)}')"
+              style="padding:3px 10px;border-radius:8px;border:1px solid #e53935;background:rgba(229,57,53,.12);color:#ef9a9a;font-size:.75rem;cursor:pointer;font-family:'Sarabun',sans-serif;">
+              ✕ ยกเลิก
+            </button>
+          </td>
         </tr>`;
       }).join('');
+    }
+
+    function cancelSwap(dksRaw) {
+      // dksRaw may be 'dk1||dk2' (paired) or just 'dk1'
+      const dks = dksRaw.split('||');
+      let names = [];
+      dks.forEach(dk => {
+        const e = swapMap[dk];
+        if (e) names.push(`${e.original} ↔ ${e.requester}`);
+        delete swapMap[dk];
+      });
+      localStorage.setItem(SWAP_KEY, JSON.stringify(swapMap));
+      buildGrid(current.getFullYear(), current.getMonth());
+      renderLog();
+      showToast(`↩ ยกเลิกการแลกเวรแล้ว`);
     }
 
     /* ─── Nav ─── */

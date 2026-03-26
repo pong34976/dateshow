@@ -506,6 +506,57 @@
     .t-paper .cal-cell.is-sat {
       background: rgba(25, 118, 210, 0.06);
     }
+    /* Swap log table */
+    .swap-log {
+      width: 100%;
+      max-width: 1100px;
+      margin-top: 24px;
+      background: var(--cell);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: none;
+    }
+    .log-hdr {
+      background: var(--hdr);
+      padding: 14px 22px;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--hdr-txt);
+      border-bottom: 1px solid var(--border);
+    }
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .83rem;
+    }
+    .log-table th {
+      padding: 9px 14px;
+      text-align: left;
+      color: var(--day-lbl);
+      font-weight: 600;
+      font-size: .75rem;
+      background: rgba(255,255,255,.03);
+      border-bottom: 1px solid var(--border);
+    }
+    .log-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--txt);
+      vertical-align: middle;
+    }
+    .log-table tr:last-child td { border-bottom: none; }
+    .tag-swap {
+      background: #00897b;
+      color: #fff;
+      font-size: .6rem;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-weight: 700;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
   </style>
 </head>
 
@@ -567,6 +618,22 @@
       <div class="day-lbl sat">ส</div>
     </div>
     <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- Swap log (ด้านล่างปฏิทิน) -->
+  <div class="swap-log" id="swapLog2">
+    <div class="log-hdr">🔄 ประวัติการแลกเวร</div>
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>ผู้ขอแลก</th>
+          <th>วันที่ได้รับ</th>
+          <th>แลกกับ</th>
+          <th>วันที่ให้คืน</th>
+        </tr>
+      </thead>
+      <tbody id="logBody2"></tbody>
+    </table>
   </div>
 
   <script>
@@ -747,6 +814,41 @@
 
     // ─── Init ─────────────────────────────────────────────
     buildGrid(current.getFullYear(), current.getMonth());
+    renderSwapLog();
+
+    function renderSwapLog() {
+      const swapMap = JSON.parse(localStorage.getItem('swapMap_v1') || '{}');
+      const allEntries = Object.entries(swapMap);
+      const logEl = document.getElementById('swapLog2');
+      const body  = document.getElementById('logBody2');
+      if (!allEntries.length) { logEl.style.display = 'none'; return; }
+      logEl.style.display = 'block';
+
+      const seen = new Set();
+      const pairs = [];
+      allEntries.forEach(([dk, e]) => {
+        if (seen.has(dk)) return;
+        const partner = allEntries.find(([dk2, e2]) =>
+          !seen.has(dk2) && dk2 !== dk &&
+          e2.original === e.requester && e2.requester === e.original
+        );
+        seen.add(dk);
+        if (partner) seen.add(partner[0]);
+        pairs.push({ a: e, b: partner ? partner[1] : null });
+      });
+      pairs.sort((x, y) => (y.a.savedAt || '').localeCompare(x.a.savedAt || ''));
+
+      const fmtD = (ds) => {
+        const d = new Date(ds);
+        return `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${String(d.getFullYear()+543).slice(2)}`;
+      };
+      body.innerHTML = pairs.map(({ a, b }) => `<tr>
+        <td><strong style="color:#4db6ac;">${a.requester}</strong> <span class="tag-swap">แลก</span></td>
+        <td>${fmtD(a.date)} <span style="opacity:.6;font-size:.78rem;">เวร${a.shift}</span></td>
+        <td><strong style="color:#ff8a65;">${a.original}</strong></td>
+        <td>${b ? fmtD(b.date) + ` <span style="opacity:.6;font-size:.78rem;">เวร${b.shift}</span>` : '–'}</td>
+      </tr>`).join('');
+    }
   </script>
 </body>
 
