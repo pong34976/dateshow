@@ -166,7 +166,7 @@
 
     .day-labels {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       background: var(--hdr);
       border-bottom: 1px solid var(--border);
     }
@@ -203,7 +203,7 @@
 
     .cal-grid {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       animation: fadein .3s ease;
     }
 
@@ -314,14 +314,17 @@
       flex-direction: column;
       gap: 1px;
       box-shadow: 0 2px 5px rgba(0, 0, 0, .25);
-      cursor: default;
+      cursor: pointer;
       position: relative;
+      overflow: hidden;
+      width: 100%;
     }
 
     .wc-time {
       font-size: .65rem;
       opacity: .8;
       font-weight: 500;
+      white-space: nowrap;
     }
 
     .wc-task {
@@ -331,6 +334,8 @@
       overflow: hidden;
       text-overflow: ellipsis;
       padding-right: 16px;
+      display: block;
+      width: 100%;
     }
 
     .wc-del {
@@ -799,6 +804,7 @@
     let dragOriginStart = 0;
     let dragOriginEnd = 0;
     let selectedPeople = new Set(); // selected people for current modal
+    let editingIndex = -1;
 
     const PEOPLE = [
       { key: 'เอ้', id: 'pb-ae' },
@@ -904,6 +910,11 @@
           ${peopleHtml}
           <button class="wc-del" title="ลบ" onclick="deleteEntry(event,'${dateStr}',${idx})">✕</button>
         `;
+        chip.onclick = (ev) => {
+          if (ev.target.classList.contains('wc-del')) return;
+          ev.stopPropagation();
+          openModal(dateStr, dateObj, idx);
+        };
         entriesDiv.appendChild(chip);
       });
 
@@ -916,7 +927,7 @@
 
       if (!otherMonth) {
         cell.addEventListener('click', (e) => {
-          if (e.target.classList.contains('wc-del')) return;
+          if (e.target.classList.contains('wc-del') || e.target.closest('.work-chip')) return;
           openModal(dateStr, dateObj);
         });
       }
@@ -1056,18 +1067,34 @@
       updateFill();
     }
 
-    // ─── Modal ────────────────────────────────────────────
-    function openModal(dateStr, dateObj) {
-      pendingDate = dateStr;
-      selStart = TIME_START;
-      selEnd = TIME_END;
-      selectedPeople = new Set();
-      renderPeopleButtons();
+    function hourFromStr(s) {
+      if(!s) return 8;
+      const [h,m] = s.split(':').map(Number);
+      return h + (m/60);
+    }
 
+    function openModal(dateStr, dateObj, editIdx = -1) {
+      pendingDate = dateStr;
+      editingIndex = editIdx;
+      selectedPeople = new Set();
       const thaiDate = `${dateObj.getDate()} ${THAI_MONTHS[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
-      document.getElementById('modalTitle').textContent = '📅 เพิ่มงาน';
       document.getElementById('modalDate').textContent = thaiDate;
-      document.getElementById('taskInput').value = '';
+
+      if (editIdx >= 0) {
+        const t = workMap[dateStr][editIdx];
+        selStart = hourFromStr(t.start);
+        selEnd = hourFromStr(t.end);
+        document.getElementById('taskInput').value = t.task;
+        if (t.people) t.people.forEach(p => selectedPeople.add(p));
+        document.getElementById('modalTitle').textContent = '✏️ แก้ไขงาน';
+      } else {
+        selStart = TIME_START;
+        selEnd = TIME_END;
+        document.getElementById('taskInput').value = '';
+        document.getElementById('modalTitle').textContent = '📅 เพิ่มงาน';
+      }
+
+      renderPeopleButtons();
       updateFill();
       document.getElementById('modalOverlay').classList.add('open');
       setTimeout(() => document.getElementById('taskInput').focus(), 200);
@@ -1105,10 +1132,22 @@
       };
 
       if (!workMap[pendingDate]) workMap[pendingDate] = [];
-      workMap[pendingDate].push(entry);
+      
+      if (editingIndex >= 0) {
+        const oldEntry = workMap[pendingDate][editingIndex];
+        // 1. Delete old from GS
+        const dp = { action: 'deleteWork', date: pendingDate, start: oldEntry.start, task: oldEntry.task };
+        fetch(GS_URL + '?' + new URLSearchParams(dp).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(x=>x);
+        
+        // Preserve status
+        if (oldEntry.status) entry.status = oldEntry.status;
+        workMap[pendingDate][editingIndex] = entry;
+      } else {
+        workMap[pendingDate].push(entry);
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(workMap));
 
-      // ส่งข้อมูลไป Google Sheets (ทำงานได้แม้เปิดจาก file://)
+      // 2. Add new to GS
       const params = new URLSearchParams({
         sheet: SHEET_NAME,
         date: pendingDate,
@@ -1121,8 +1160,13 @@
 
       closeModal();
       buildGrid(current.getFullYear(), current.getMonth());
+      
       const whoTxt = people.length ? ` · ${people.join(', ')}` : '';
-      showToast(`✅ บันทึก "${task}" (${entry.start}–${entry.end})${whoTxt}`);
+      if (editingIndex >= 0) {
+        showToast(`✅ แก้ไขงาน "${task}" สำเร็จ`);
+      } else {
+        showToast(`✅ บันทึก "${task}" (${entry.start}–${entry.end})${whoTxt}`);
+      }
     }
 
     // ─── Nav ──────────────────────────────────────────────

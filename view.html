@@ -291,7 +291,7 @@
 
     .day-labels {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       background: var(--hdr);
       border-bottom: 1px solid var(--border);
     }
@@ -311,7 +311,7 @@
 
     .cal-grid {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, minmax(0, 1fr));
     }
 
     @keyframes fadein {
