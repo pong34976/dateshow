@@ -932,6 +932,13 @@
       if (!arr.length) delete workMap[dateStr];
       else workMap[dateStr] = arr;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(workMap));
+
+      // ส่งเลบลบไป Google Sheets
+      if (removed) {
+        const p = { action: 'deleteWork', date: dateStr, start: removed.start, task: removed.task };
+        fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e=>console.log(e));
+      }
+
       buildGrid(current.getFullYear(), current.getMonth());
       showToast(`🗑 ลบงาน "${removed.task}" แล้ว`);
     }
