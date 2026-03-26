@@ -646,10 +646,21 @@
       box-shadow: 0 0 0 2px currentColor;
     }
 
-    .people-btn.p-ae    { color: #fbbf24; }
-    .people-btn.p-flook { color: #60a5fa; }
-    .people-btn.p-joe   { color: #a78bfa; }
-    .people-btn.p-wan   { color: #34d399; }
+    .people-btn.p-ae {
+      color: #fbbf24;
+    }
+
+    .people-btn.p-flook {
+      color: #60a5fa;
+    }
+
+    .people-btn.p-joe {
+      color: #a78bfa;
+    }
+
+    .people-btn.p-wan {
+      color: #34d399;
+    }
 
     /* People avatars inside chip */
     .wc-people {
@@ -675,7 +686,7 @@
 
   <div class="topbar">
     <div class="app-title">
-      <a href="index.html" class="btn-back" title="กลับหน้าหลัก">🔙</a>
+      <a href="qhd.html" class="btn-back" title="กลับหน้าหลัก">🔙</a>
       📝 จัดการตารางงาน
       <span class="badge">แก้ไข</span>
     </div>
@@ -732,17 +743,18 @@
       <!-- Task name -->
       <div class="task-section">
         <label class="task-label" for="taskInput">📋 ชื่องาน</label>
-        <input id="taskInput" class="task-input" type="text" placeholder="เช่น ประชุมทีม, ฝึกอบรม, ตรวจงาน..." autocomplete="off" />
+        <input id="taskInput" class="task-input" type="text" placeholder="เช่น ประชุมทีม, ฝึกอบรม, ตรวจงาน..."
+          autocomplete="off" />
       </div>
 
       <!-- People picker -->
       <div class="people-section">
         <span class="people-label">👥 ผู้ร่วมงาน (เลือกได้หลายคน)</span>
         <div class="people-grid">
-          <button class="people-btn p-ae"    id="pb-ae"    onclick="togglePerson('เอ้')">👤 เอ้</button>
+          <button class="people-btn p-ae" id="pb-ae" onclick="togglePerson('เอ้')">👤 เอ้</button>
           <button class="people-btn p-flook" id="pb-flook" onclick="togglePerson('ฟลุ๊ค')">👤 ฟลุ๊ค</button>
-          <button class="people-btn p-joe"   id="pb-joe"   onclick="togglePerson('โจ้')">👤 โจ้</button>
-          <button class="people-btn p-wan"   id="pb-wan"   onclick="togglePerson('ว่าน')">👤 ว่าน</button>
+          <button class="people-btn p-joe" id="pb-joe" onclick="togglePerson('โจ้')">👤 โจ้</button>
+          <button class="people-btn p-wan" id="pb-wan" onclick="togglePerson('ว่าน')">👤 ว่าน</button>
         </div>
       </div>
 
@@ -789,10 +801,10 @@
     let selectedPeople = new Set(); // selected people for current modal
 
     const PEOPLE = [
-      { key: 'เอ้',   id: 'pb-ae'    },
+      { key: 'เอ้', id: 'pb-ae' },
       { key: 'ฟลุ๊ค', id: 'pb-flook' },
-      { key: 'โจ้',   id: 'pb-joe'   },
-      { key: 'ว่าน',  id: 'pb-wan'   },
+      { key: 'โจ้', id: 'pb-joe' },
+      { key: 'ว่าน', id: 'pb-wan' },
     ];
 
     function togglePerson(name) {
