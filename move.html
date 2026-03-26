@@ -1327,7 +1327,9 @@
       // Send to Google Sheets (both sides)
       [{ action:'swap', date:dateStr, shift, slot, name:originalName, requester },
        { action:'swap', date:mine.dateStr, shift:mine.shift, slot:mine.slot, name:requester, requester:originalName }]
-      .forEach(p => { new Image().src = GS_URL + '?' + new URLSearchParams(p).toString(); });
+      .forEach(p => { 
+        fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e=>console.log(e));
+      });
 
       buildGrid(current.getFullYear(), current.getMonth());
       renderLog();
@@ -1394,7 +1396,7 @@
       
       // ส่งไปลบใน Sheet
       const p = { action: 'cancelSwap', dks: dksRaw };
-      new Image().src = GS_URL + '?' + new URLSearchParams(p).toString();
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e=>console.log(e));
 
       buildGrid(current.getFullYear(), current.getMonth());
       renderLog();

@@ -1101,7 +1101,7 @@
       workMap[pendingDate].push(entry);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(workMap));
 
-      // ส่งข้อมูลไป Google Sheets ด้วย Image pixel (ทำงานได้แม้เปิดจาก file://)
+      // ส่งข้อมูลไป Google Sheets (ทำงานได้แม้เปิดจาก file://)
       const params = new URLSearchParams({
         sheet: SHEET_NAME,
         date: pendingDate,
@@ -1110,7 +1110,7 @@
         task,
         people: people.join(',')
       });
-      new Image().src = GS_URL + '?' + params.toString();
+      fetch(GS_URL + '?' + params.toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e=>console.log(e));
 
       closeModal();
       buildGrid(current.getFullYear(), current.getMonth());
