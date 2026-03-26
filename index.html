@@ -166,7 +166,10 @@
       flex-wrap: wrap;
     }
 
-    .theme-label { color: var(--day-lbl); font-size: .8rem; }
+    .theme-label {
+      color: var(--day-lbl);
+      font-size: .8rem;
+    }
 
     .swatch {
       width: 24px;
@@ -178,7 +181,9 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, .4);
     }
 
-    .swatch:hover { transform: scale(1.2); }
+    .swatch:hover {
+      transform: scale(1.2);
+    }
 
     .swatch.active {
       border-color: #fff;
@@ -186,7 +191,12 @@
       box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
     }
 
-    .legend { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .legend {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
     .leg-chip {
       display: flex;
@@ -199,9 +209,16 @@
       cursor: pointer;
     }
 
-    .leg-chip:hover { opacity: 1; transform: scale(1.05); }
+    .leg-chip:hover {
+      opacity: 1;
+      transform: scale(1.05);
+    }
 
-    .leg-dot { width: 11px; height: 11px; border-radius: 50%; }
+    .leg-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
 
     .btn-action {
       padding: 6px 14px;
@@ -211,10 +228,11 @@
       font-weight: 600;
       font-size: 0.85rem;
       border-radius: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
       transition: transform 0.2s;
       display: inline-block;
     }
+
     .btn-action:hover {
       transform: scale(1.05);
     }
@@ -241,10 +259,22 @@
       flex-wrap: wrap;
     }
 
-    .cal-title { font-size: 1.55rem; font-weight: 700; color: var(--hdr-txt); letter-spacing: .3px; }
-    .cal-title span { color: var(--accent); }
+    .cal-title {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--hdr-txt);
+      letter-spacing: .3px;
+    }
 
-    .nav-group { display: flex; gap: 8px; align-items: center; }
+    .cal-title span {
+      color: var(--accent);
+    }
+
+    .nav-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
 
     .nav-btn {
       background: var(--nav);
@@ -261,7 +291,11 @@
       transition: background .2s, transform .15s, box-shadow .2s;
     }
 
-    .nav-btn:hover { background: var(--nav-hov); transform: scale(1.1); box-shadow: 0 0 10px var(--accent); }
+    .nav-btn:hover {
+      background: var(--nav-hov);
+      transform: scale(1.1);
+      box-shadow: 0 0 10px var(--accent);
+    }
 
     .today-btn {
       padding: 7px 16px;
@@ -275,7 +309,10 @@
       transition: opacity .2s, transform .15s;
     }
 
-    .today-btn:hover { opacity: .8; transform: scale(1.05); }
+    .today-btn:hover {
+      opacity: .8;
+      transform: scale(1.05);
+    }
 
     .day-labels {
       display: grid;
@@ -294,17 +331,34 @@
       text-transform: uppercase;
     }
 
-    .day-lbl.sun { color: var(--sun); }
-    .day-lbl.sat { color: var(--sat); }
-
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-
-    @keyframes fadein {
-      from { opacity: 0; transform: translateY(8px) }
-      to { opacity: 1; transform: translateY(0) }
+    .day-lbl.sun {
+      color: var(--sun);
     }
 
-    .cal-grid { animation: fadein .3s ease; }
+    .day-lbl.sat {
+      color: var(--sat);
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .cal-grid {
+      animation: fadein .3s ease;
+    }
 
     .cal-cell {
       min-height: 155px;
@@ -318,9 +372,17 @@
       position: relative;
     }
 
-    .cal-cell:nth-child(7n) { border-right: none; }
-    .cal-cell:hover { background: var(--cell-hov); }
-    .cal-cell.other-month { opacity: .3; }
+    .cal-cell:nth-child(7n) {
+      border-right: none;
+    }
+
+    .cal-cell:hover {
+      background: var(--cell-hov);
+    }
+
+    .cal-cell.other-month {
+      opacity: .3;
+    }
 
     .cal-cell.is-today::after {
       content: '';
@@ -353,11 +415,24 @@
       box-shadow: 0 3px 10px rgba(0, 0, 0, .4);
     }
 
-    .cal-cell.is-sun .day-num { color: var(--sun); }
-    .cal-cell.is-sat .day-num { color: var(--sat); }
-    .cal-cell.other-month .day-num { color: var(--txt); }
+    .cal-cell.is-sun .day-num {
+      color: var(--sun);
+    }
 
-    .shifts { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .cal-cell.is-sat .day-num {
+      color: var(--sat);
+    }
+
+    .cal-cell.other-month .day-num {
+      color: var(--txt);
+    }
+
+    .shifts {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
 
     /* Custom colored shift slots for dashboard */
     .view-shift {
@@ -369,7 +444,7 @@
       border-radius: 8px;
       font-weight: 700;
       font-size: 0.88rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
 
     /* Swap display */
@@ -379,19 +454,23 @@
       padding: 5px 5px;
       position: relative;
     }
+
     .swap-old {
       text-decoration: line-through;
       opacity: .55;
       font-size: .72rem;
       font-weight: 600;
     }
+
     .swap-new {
       font-size: .85rem;
       font-weight: 800;
     }
+
     .swap-badge-idx {
       position: absolute;
-      top: 2px; right: 3px;
+      top: 2px;
+      right: 3px;
       background: #00897b;
       color: #fff;
       font-size: .5rem;
@@ -401,37 +480,71 @@
       letter-spacing: .3px;
     }
 
-    .cal-cell.is-sun, .cal-cell.is-holiday { background: rgba(255, 107, 107, 0.05); }
-    .cal-cell.is-sat { background: rgba(128, 176, 255, 0.05); }
-    .cal-cell.is-sun:hover, .cal-cell.is-holiday:hover { background: rgba(255, 107, 107, 0.1); }
-    .cal-cell.is-sat:hover { background: rgba(128, 176, 255, 0.1); }
-    .t-paper .cal-cell.is-sun, .t-paper .cal-cell.is-holiday { background: rgba(211, 47, 47, 0.06); }
-    .t-paper .cal-cell.is-sat { background: rgba(25, 118, 210, 0.06); }
+    .cal-cell.is-sun,
+    .cal-cell.is-holiday {
+      background: rgba(255, 107, 107, 0.05);
+    }
+
+    .cal-cell.is-sat {
+      background: rgba(128, 176, 255, 0.05);
+    }
+
+    .cal-cell.is-sun:hover,
+    .cal-cell.is-holiday:hover {
+      background: rgba(255, 107, 107, 0.1);
+    }
+
+    .cal-cell.is-sat:hover {
+      background: rgba(128, 176, 255, 0.1);
+    }
+
+    .t-paper .cal-cell.is-sun,
+    .t-paper .cal-cell.is-holiday {
+      background: rgba(211, 47, 47, 0.06);
+    }
+
+    .t-paper .cal-cell.is-sat {
+      background: rgba(25, 118, 210, 0.06);
+    }
   </style>
 </head>
 
 <body>
-
+  v 1
   <div class="topbar">
     <div class="app-title">
       📋 ระบบเวร
       <span class="badge">แดชบอร์ดรวม</span>
     </div>
     <div class="legend">
-      <a href="view.html?u=joe" class="leg-chip" title="ดูเวร โจ้"><div class="leg-dot" style="background:var(--c-joe)"></div>โจ้</a>
-      <a href="view.html?u=wan" class="leg-chip" title="ดูเวร ว่าน"><div class="leg-dot" style="background:var(--c-wan)"></div>ว่าน</a>
-      <a href="view.html?u=flook" class="leg-chip" title="ดูเวร ฟลุ๊ค"><div class="leg-dot" style="background:var(--c-flook)"></div>ฟลุ๊ค</a>
-      <a href="view.html?u=ae" class="leg-chip" title="ดูเวร เอ้"><div class="leg-dot" style="background:var(--c-ae)"></div>เอ้</a>
+      <a href="view.html?u=joe" class="leg-chip" title="ดูเวร โจ้">
+        <div class="leg-dot" style="background:var(--c-joe)"></div>โจ้
+      </a>
+      <a href="view.html?u=wan" class="leg-chip" title="ดูเวร ว่าน">
+        <div class="leg-dot" style="background:var(--c-wan)"></div>ว่าน
+      </a>
+      <a href="view.html?u=flook" class="leg-chip" title="ดูเวร ฟลุ๊ค">
+        <div class="leg-dot" style="background:var(--c-flook)"></div>ฟลุ๊ค
+      </a>
+      <a href="view.html?u=ae" class="leg-chip" title="ดูเวร เอ้">
+        <div class="leg-dot" style="background:var(--c-ae)"></div>เอ้
+      </a>
     </div>
     <div class="theme-bar">
       <a href="edit.html" class="btn-action">✏️ จัดการเวร</a>
       <a href="move.html" class="btn-action" style="background:#00897b;">🔄 แลกเวร</a>
+      <a href="../qhd/index.html" class="btn-action" style="background:#1565c0;">📅 ตารางงาน</a>
       <span class="theme-label" style="margin-left: 8px;">🎨</span>
-      <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic"></div>
-      <div class="swatch" data-theme="paper" style="background:linear-gradient(135deg,#795548,#f0ebe1)" title="Paper"></div>
-      <div class="swatch" data-theme="coffee" style="background:linear-gradient(135deg,#3d2b1f,#1c140d)" title="Coffee"></div>
-      <div class="swatch" data-theme="dark" style="background:linear-gradient(135deg,#1a1a1a,#000000)" title="Dark"></div>
-      <div class="swatch" data-theme="candy" style="background:linear-gradient(135deg,#ff4081,#2d0a1c)" title="Candy"></div>
+      <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic">
+      </div>
+      <div class="swatch" data-theme="paper" style="background:linear-gradient(135deg,#795548,#f0ebe1)" title="Paper">
+      </div>
+      <div class="swatch" data-theme="coffee" style="background:linear-gradient(135deg,#3d2b1f,#1c140d)" title="Coffee">
+      </div>
+      <div class="swatch" data-theme="dark" style="background:linear-gradient(135deg,#1a1a1a,#000000)" title="Dark">
+      </div>
+      <div class="swatch" data-theme="candy" style="background:linear-gradient(135deg,#ff4081,#2d0a1c)" title="Candy">
+      </div>
     </div>
   </div>
 
@@ -458,7 +571,7 @@
 
   <script>
     const STORAGE_KEY = 'dutyMap_v1';
-    const SWAP_KEY    = 'swapMap_v1';
+    const SWAP_KEY = 'swapMap_v1';
 
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -472,7 +585,7 @@
     let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
 
     let dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    let swapMap = JSON.parse(localStorage.getItem(SWAP_KEY)    || '{}');
+    let swapMap = JSON.parse(localStorage.getItem(SWAP_KEY) || '{}');
 
     function fmtDate(d) {
       const y = d.getFullYear();
@@ -531,7 +644,7 @@
       num.className = 'day-num';
       num.textContent = dayNum;
       if (otherMonth) {
-          num.style.opacity = '0.5';
+        num.style.opacity = '0.5';
       }
       cell.appendChild(num);
 
@@ -551,26 +664,26 @@
         let textShadow = '';
 
         // Applying requested colors: เช้า = สีเหลือง, บ่าย = สีส้ม, ดึก = สีฟ้าโทนมืด
-        if (key === 'เช้า') { 
-            bgColor = '#fdd835'; // Yellow
-            textColor = '#3e2723'; // Dark brown/black for contrast
-        } 
-        else if (key === 'บ่าย') { 
-            bgColor = '#f57c00'; // Orange
-            textColor = '#fff';
-            textShadow = '0 1px 2px rgba(0,0,0,0.5)';
-        } 
-        else if (key === 'ดึก') { 
-            bgColor = '#0d47a1'; // Dark Blue 
-            textColor = '#fff';
-            textShadow = '0 1px 2px rgba(0,0,0,0.5)';
+        if (key === 'เช้า') {
+          bgColor = '#fdd835'; // Yellow
+          textColor = '#3e2723'; // Dark brown/black for contrast
+        }
+        else if (key === 'บ่าย') {
+          bgColor = '#f57c00'; // Orange
+          textColor = '#fff';
+          textShadow = '0 1px 2px rgba(0,0,0,0.5)';
+        }
+        else if (key === 'ดึก') {
+          bgColor = '#0d47a1'; // Dark Blue 
+          textColor = '#fff';
+          textShadow = '0 1px 2px rgba(0,0,0,0.5)';
         }
 
         for (let s = 1; s <= slots; s++) {
           const name = dutyMap[dutyKey(dateStr, key, s)] || '';
           if (name) {
             hasAnyShift = true;
-            const dk        = dutyKey(dateStr, key, s);
+            const dk = dutyKey(dateStr, key, s);
             const swapEntry = swapMap[dk];
             let html;
             if (swapEntry) {

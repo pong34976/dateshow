@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>จัดการตารางงาน QHD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a1628;
+      --bg2: radial-gradient(ellipse at 20% 0%, #1a2d50 0%, #0a1628 65%);
+      --hdr: rgba(255, 255, 255, 0.05);
+      --hdr-txt: #fff;
+      --day-lbl: rgba(255, 255, 255, 0.45);
+      --cell: rgba(255, 255, 255, 0.03);
+      --cell-hov: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.08);
+      --txt: #ddd;
+      --nav: rgba(255, 255, 255, 0.12);
+      --nav-hov: rgba(255, 255, 255, 0.22);
+      --accent: #2979ff;
+      --today-ring: #2979ff;
+      --sun: #ff6b6b;
+      --sat: #80b0ff;
+      --shadow: 0 8px 40px rgba(0, 0, 0, .55);
+      --radius: 18px;
+      --modal-bg: #0d1e3a;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg2, var(--bg));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 40px;
+    }
+
+    /* Topbar */
+    .topbar {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .app-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--hdr-txt);
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-title .badge {
+      font-size: .72rem;
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .btn-back {
+      text-decoration: none;
+      margin-right: 8px;
+      display: inline-block;
+      transform: scale(1.2);
+    }
+
+    /* Calendar */
+    .calendar {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--cell);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+    }
+
+    .cal-header {
+      background: var(--hdr);
+      padding: 20px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .cal-title {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--hdr-txt);
+      letter-spacing: .3px;
+    }
+
+    .cal-title span {
+      color: var(--accent);
+    }
+
+    .nav-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: var(--nav);
+      color: var(--hdr-txt);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, transform .15s, box-shadow .2s;
+    }
+
+    .nav-btn:hover {
+      background: var(--nav-hov);
+      transform: scale(1.1);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .today-btn {
+      padding: 7px 16px;
+      border-radius: 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: 'Sarabun', sans-serif;
+      font-size: .88rem;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+    }
+
+    .today-btn:hover {
+      opacity: .8;
+      transform: scale(1.05);
+    }
+
+    .day-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--hdr);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .day-lbl {
+      text-align: center;
+      padding: 10px 0;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--day-lbl);
+      text-transform: uppercase;
+    }
+
+    .day-lbl.sun {
+      color: var(--sun);
+    }
+
+    .day-lbl.sat {
+      color: var(--sat);
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      animation: fadein .3s ease;
+    }
+
+    .cal-cell {
+      min-height: 140px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 6px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      transition: background .2s;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .cal-cell:nth-child(7n) {
+      border-right: none;
+    }
+
+    .cal-cell:hover {
+      background: var(--cell-hov);
+    }
+
+    .cal-cell.other-month {
+      opacity: .22;
+      pointer-events: none;
+    }
+
+    .cal-cell.is-today::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 2px solid var(--today-ring);
+      border-radius: 2px;
+      opacity: .5;
+    }
+
+    .day-num {
+      font-size: .9rem;
+      font-weight: 700;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--txt);
+      transition: background .2s, color .2s;
+      margin-bottom: 4px;
+    }
+
+    .cal-cell.is-today .day-num {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .4);
+    }
+
+    .cal-cell.is-sun .day-num {
+      color: var(--sun);
+    }
+
+    .cal-cell.is-sat .day-num {
+      color: var(--sat);
+    }
+
+    .cal-cell.is-sun,
+    .cal-cell.is-holiday {
+      background: rgba(255, 107, 107, 0.04);
+    }
+
+    .cal-cell.is-sat {
+      background: rgba(128, 176, 255, 0.04);
+    }
+
+    .add-hint {
+      font-size: .68rem;
+      color: var(--day-lbl);
+      opacity: 0;
+      transition: opacity .2s;
+      text-align: center;
+      margin-top: auto;
+      padding-bottom: 4px;
+    }
+
+    .cal-cell:hover .add-hint {
+      opacity: .7;
+    }
+
+    .work-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+    }
+
+    /* Work chip in edit view */
+    .work-chip {
+      border-radius: 7px;
+      padding: 4px 6px;
+      font-size: .75rem;
+      font-weight: 600;
+      background: #1565c0;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, .25);
+      cursor: default;
+      position: relative;
+    }
+
+    .wc-time {
+      font-size: .65rem;
+      opacity: .8;
+      font-weight: 500;
+    }
+
+    .wc-task {
+      font-size: .76rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 16px;
+    }
+
+    .wc-del {
+      position: absolute;
+      top: 3px;
+      right: 4px;
+      background: rgba(255, 255, 255, .2);
+      border: none;
+      color: #fff;
+      border-radius: 4px;
+      width: 16px;
+      height: 16px;
+      font-size: .6rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s;
+    }
+
+    .wc-del:hover {
+      background: rgba(255, 59, 59, .7);
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--modal-bg, #0d1e3a);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px 30px 24px;
+      width: 92%;
+      max-width: 420px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .7);
+      transform: translateY(20px) scale(.97);
+      transition: transform .25s ease;
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--hdr-txt);
+      margin-bottom: 3px;
+    }
+
+    .modal-date {
+      font-size: .82rem;
+      color: var(--day-lbl);
+      margin-bottom: 22px;
+    }
+
+    /* Time slider */
+    .time-section {
+      margin-bottom: 20px;
+    }
+
+    .time-section-label {
+      font-size: .82rem;
+      color: var(--day-lbl);
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .time-selected-display {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(41, 121, 255, 0.12);
+      padding: 3px 10px;
+      border-radius: 8px;
+    }
+
+    /* Timeline bar */
+    .timeline-wrap {
+      position: relative;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .timeline-bar {
+      height: 44px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      position: relative;
+      cursor: crosshair;
+      overflow: hidden;
+    }
+
+    .timeline-fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, #1565c0, #2979ff);
+      border-radius: 8px;
+      pointer-events: none;
+      transition: left .05s, width .05s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .78rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .timeline-ticks {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0 0;
+    }
+
+    .tick {
+      font-size: .62rem;
+      color: var(--day-lbl);
+      text-align: center;
+      flex: 1;
+    }
+
+    /* Preset buttons */
+    .presets {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .preset-btn {
+      padding: 5px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(41, 121, 255, .4);
+      background: rgba(41, 121, 255, .1);
+      color: #82b1ff;
+      font-family: 'Sarabun', sans-serif;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, transform .12s;
+    }
+
+    .preset-btn:hover {
+      background: rgba(41, 121, 255, .25);
+      transform: scale(1.05);
+    }
+
+    /* Task input */
+    .task-section {
+      margin-bottom: 20px;
+    }
+
+    .task-label {
+      font-size: .82rem;
+      color: var(--day-lbl);
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .task-input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      color: var(--hdr-txt);
+      font-family: 'Sarabun', sans-serif;
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .task-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(41, 121, 255, .2);
+    }
+
+    .task-input::placeholder {
+      color: rgba(255, 255, 255, .25);
+    }
+
+    /* Buttons */
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-save {
+      flex: 1;
+      padding: 11px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: 'Sarabun', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+    }
+
+    .btn-save:hover {
+      background: #1565c0;
+      transform: scale(1.03);
+    }
+
+    .btn-cancel {
+      padding: 11px 18px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      color: var(--day-lbl);
+      font-family: 'Sarabun', sans-serif;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255, 255, 255, .12);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: .88rem;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+      transition: transform .3s ease, opacity .3s;
+      opacity: 0;
+      z-index: 2000;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* People picker */
+    .people-section {
+      margin-bottom: 20px;
+    }
+
+    .people-label {
+      font-size: .82rem;
+      color: var(--day-lbl);
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .people-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .people-btn {
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      font-family: 'Sarabun', sans-serif;
+      font-size: .88rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: rgba(255, 255, 255, .05);
+      color: #aaa;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .people-btn:hover {
+      transform: scale(1.04);
+    }
+
+    .people-btn.selected {
+      background: rgba(255, 255, 255, .12);
+      box-shadow: 0 0 0 2px currentColor;
+    }
+
+    .people-btn.p-ae    { color: #fbbf24; }
+    .people-btn.p-flook { color: #60a5fa; }
+    .people-btn.p-joe   { color: #a78bfa; }
+    .people-btn.p-wan   { color: #34d399; }
+
+    /* People avatars inside chip */
+    .wc-people {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .wc-avatar {
+      font-size: .62rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, .2);
+      padding: 1px 5px;
+      border-radius: 5px;
+      color: #fff;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="app-title">
+      <a href="index.html" class="btn-back" title="กลับหน้าหลัก">🔙</a>
+      📝 จัดการตารางงาน
+      <span class="badge">แก้ไข</span>
+    </div>
+  </div>
+
+  <div class="calendar">
+    <div class="cal-header">
+      <div class="cal-title" id="calTitle">– <span>–</span></div>
+      <div class="nav-group">
+        <button class="today-btn" id="btnToday">วันนี้</button>
+        <button class="nav-btn" id="btnPrev">&#8249;</button>
+        <button class="nav-btn" id="btnNext">&#8250;</button>
+      </div>
+    </div>
+    <div class="day-labels">
+      <div class="day-lbl sun">อา</div>
+      <div class="day-lbl">จ</div>
+      <div class="day-lbl">อ</div>
+      <div class="day-lbl">พ</div>
+      <div class="day-lbl">พฤ</div>
+      <div class="day-lbl">ศ</div>
+      <div class="day-lbl sat">ส</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- Add-task modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">เพิ่มงาน</div>
+      <div class="modal-date" id="modalDate">–</div>
+
+      <!-- Time range slider -->
+      <div class="time-section">
+        <div class="time-section-label">
+          <span>🕐 เลือกช่วงเวลา</span>
+          <span class="time-selected-display" id="timeDisplay">08:00 – 16:00</span>
+        </div>
+        <div class="timeline-wrap" id="timelineWrap">
+          <div class="timeline-bar" id="timelineBar">
+            <div class="timeline-fill" id="timelineFill"></div>
+          </div>
+          <div class="timeline-ticks" id="timelineTicks"></div>
+        </div>
+        <div class="presets">
+          <button class="preset-btn" onclick="setPreset(8,12)">08:00–12:00</button>
+          <button class="preset-btn" onclick="setPreset(8,16)">08:00–16:00</button>
+          <button class="preset-btn" onclick="setPreset(13,16)">13:00–16:00</button>
+          <button class="preset-btn" onclick="setPreset(9,11)">09:00–11:00</button>
+          <button class="preset-btn" onclick="setPreset(14,16)">14:00–16:00</button>
+        </div>
+      </div>
+
+      <!-- Task name -->
+      <div class="task-section">
+        <label class="task-label" for="taskInput">📋 ชื่องาน</label>
+        <input id="taskInput" class="task-input" type="text" placeholder="เช่น ประชุมทีม, ฝึกอบรม, ตรวจงาน..." autocomplete="off" />
+      </div>
+
+      <!-- People picker -->
+      <div class="people-section">
+        <span class="people-label">👥 ผู้ร่วมงาน (เลือกได้หลายคน)</span>
+        <div class="people-grid">
+          <button class="people-btn p-ae"    id="pb-ae"    onclick="togglePerson('เอ้')">👤 เอ้</button>
+          <button class="people-btn p-flook" id="pb-flook" onclick="togglePerson('ฟลุ๊ค')">👤 ฟลุ๊ค</button>
+          <button class="people-btn p-joe"   id="pb-joe"   onclick="togglePerson('โจ้')">👤 โจ้</button>
+          <button class="people-btn p-wan"   id="pb-wan"   onclick="togglePerson('ว่าน')">👤 ว่าน</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-save" id="btnSave">✅ บันทึก</button>
+        <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ═══════════════════════════════════════
+    //  CONFIG
+    // ═══════════════════════════════════════
+    const GS_URL = "https://script.google.com/macros/s/AKfycbxhYd-zD7f8SsWsGNcOWUHZI_94IZUqHFFa8lE2Ugv2PHYHDctqzPycBYKu4zp9Ol0P/exec";
+    const STORAGE_KEY = 'workMap_v1';
+    const SHEET_NAME = 'work';
+    // ═══════════════════════════════════════
+
+    const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+    const CHIP_COLORS = ['#1565c0', '#0277bd', '#00838f', '#2e7d32', '#6a1b9a', '#ad1457', '#e65100', '#4e342e'];
+
+    // Time range: 08:00 – 16:00 = 8 hours = 480 minutes
+    const TIME_START = 8;    // 08:00
+    const TIME_END = 16;     // 16:00
+    const TIME_TOTAL = TIME_END - TIME_START; // 8 hours
+
+    const TODAY = new Date();
+    let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+    let workMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+    let pendingDate = '';
+    let selStart = TIME_START;   // selected start hour (float)
+    let selEnd = TIME_END;       // selected end hour (float)
+    let isDragging = false;
+    let dragMode = 'none';       // 'create' | 'left' | 'right' | 'move'
+    let dragOriginX = 0;
+    let dragOriginStart = 0;
+    let dragOriginEnd = 0;
+    let selectedPeople = new Set(); // selected people for current modal
+
+    const PEOPLE = [
+      { key: 'เอ้',   id: 'pb-ae'    },
+      { key: 'ฟลุ๊ค', id: 'pb-flook' },
+      { key: 'โจ้',   id: 'pb-joe'   },
+      { key: 'ว่าน',  id: 'pb-wan'   },
+    ];
+
+    function togglePerson(name) {
+      if (selectedPeople.has(name)) {
+        selectedPeople.delete(name);
+      } else {
+        selectedPeople.add(name);
+      }
+      renderPeopleButtons();
+    }
+
+    function renderPeopleButtons() {
+      PEOPLE.forEach(({ key, id }) => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.toggle('selected', selectedPeople.has(key));
+      });
+    }
+
+    function fmtDate(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function hhmm(h) {
+      const q = Math.round(h * 4) / 4;   // snap to 15-min
+      const hh = Math.floor(q);
+      const mm = Math.round((q - hh) * 60);
+      return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+    }
+
+    function showToast(msg, err = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = err ? '#e53935' : '#1565c0';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    // ─── Calendar ─────────────────────────────────────────
+    function buildGrid(year, month) {
+      const grid = document.getElementById('calGrid');
+      grid.style.animation = 'none';
+      grid.offsetHeight;
+      grid.style.animation = '';
+      grid.innerHTML = '';
+
+      const first = new Date(year, month, 1);
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const startDow = first.getDay();
+      const prevLast = new Date(year, month, 0).getDate();
+
+      for (let i = startDow - 1; i >= 0; i--) addCell(prevLast - i, true, new Date(year, month - 1, prevLast - i));
+      for (let d = 1; d <= totalDays; d++) addCell(d, false, new Date(year, month, d));
+      const filled = startDow + totalDays;
+      const total = Math.ceil(filled / 7) * 7;
+      for (let i = 1; i <= total - filled; i++) addCell(i, true, new Date(year, month + 1, i));
+
+      document.getElementById('calTitle').innerHTML = `${THAI_MONTHS[month]} <span>${year + 543}</span>`;
+    }
+
+    function addCell(dayNum, otherMonth, dateObj) {
+      const grid = document.getElementById('calGrid');
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell';
+      if (otherMonth) cell.classList.add('other-month');
+
+      const dow = dateObj.getDay();
+      if (dow === 0) cell.classList.add('is-sun');
+      if (dow === 6) cell.classList.add('is-sat');
+
+      const isToday = !otherMonth &&
+        dateObj.getFullYear() === TODAY.getFullYear() &&
+        dateObj.getMonth() === TODAY.getMonth() &&
+        dateObj.getDate() === TODAY.getDate();
+      if (isToday) cell.classList.add('is-today');
+
+      const num = document.createElement('div');
+      num.className = 'day-num';
+      num.textContent = dayNum;
+      cell.appendChild(num);
+
+      const dateStr = fmtDate(dateObj);
+      const entries = workMap[dateStr] || [];
+
+      const entriesDiv = document.createElement('div');
+      entriesDiv.className = 'work-entries';
+
+      entries.forEach((e, idx) => {
+        const chip = document.createElement('div');
+        chip.className = 'work-chip';
+        chip.style.background = CHIP_COLORS[idx % CHIP_COLORS.length];
+        const peopleHtml = (e.people && e.people.length)
+          ? `<div class="wc-people">${e.people.map(p => `<span class="wc-avatar">${p}</span>`).join('')}</div>`
+          : '';
+        chip.innerHTML = `
+          <span class="wc-time">⏰ ${e.start}–${e.end}</span>
+          <span class="wc-task">${e.task}</span>
+          ${peopleHtml}
+          <button class="wc-del" title="ลบ" onclick="deleteEntry(event,'${dateStr}',${idx})">✕</button>
+        `;
+        entriesDiv.appendChild(chip);
+      });
+
+      cell.appendChild(entriesDiv);
+
+      const hint = document.createElement('div');
+      hint.className = 'add-hint';
+      hint.textContent = '+ เพิ่มงาน';
+      cell.appendChild(hint);
+
+      if (!otherMonth) {
+        cell.addEventListener('click', (e) => {
+          if (e.target.classList.contains('wc-del')) return;
+          openModal(dateStr, dateObj);
+        });
+      }
+
+      grid.appendChild(cell);
+    }
+
+    // ─── Delete entry ──────────────────────────────────────
+    function deleteEntry(ev, dateStr, idx) {
+      ev.stopPropagation();
+      const arr = workMap[dateStr] || [];
+      const removed = arr.splice(idx, 1)[0];
+      if (!arr.length) delete workMap[dateStr];
+      else workMap[dateStr] = arr;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(workMap));
+      buildGrid(current.getFullYear(), current.getMonth());
+      showToast(`🗑 ลบงาน "${removed.task}" แล้ว`);
+    }
+
+    // ─── Time-range slider ────────────────────────────────
+    function buildTicks() {
+      const ticks = document.getElementById('timelineTicks');
+      ticks.innerHTML = '';
+      for (let h = TIME_START; h <= TIME_END; h++) {
+        const t = document.createElement('div');
+        t.className = 'tick';
+        t.textContent = `${String(h).padStart(2, '0')}:00`;
+        ticks.appendChild(t);
+      }
+    }
+
+    function updateFill() {
+      const bar = document.getElementById('timelineBar');
+      const fill = document.getElementById('timelineFill');
+      const pct = (h) => ((h - TIME_START) / TIME_TOTAL) * 100;
+      const left = pct(selStart);
+      const width = pct(selEnd) - left;
+      fill.style.left = left + '%';
+      fill.style.width = width + '%';
+      const label = `${hhmm(selStart)} – ${hhmm(selEnd)}`;
+      fill.textContent = width > 8 ? label : '';
+      document.getElementById('timeDisplay').textContent = `${hhmm(selStart)} – ${hhmm(selEnd)}`;
+    }
+
+    function barXtoHour(x, barRect) {
+      const ratio = Math.max(0, Math.min(1, (x - barRect.left) / barRect.width));
+      return TIME_START + ratio * TIME_TOTAL;
+    }
+
+    function snapHour(h) {
+      // snap to 15-minute intervals
+      return Math.round(h * 4) / 4;
+    }
+
+    function clamp(val, lo, hi) {
+      return Math.max(lo, Math.min(hi, val));
+    }
+
+    // Setup dragging on the timeline bar
+    function setupTimeline() {
+      const bar = document.getElementById('timelineBar');
+
+      function onPointerDown(e) {
+        e.preventDefault();
+        isDragging = true;
+        bar.setPointerCapture(e.pointerId);
+        const rect = bar.getBoundingClientRect();
+        const h = barXtoHour(e.clientX, rect);
+
+        // Check if near selStart or selEnd handle (±5%)
+        const startPct = (selStart - TIME_START) / TIME_TOTAL;
+        const endPct = (selEnd - TIME_START) / TIME_TOTAL;
+        const ratioPct = (h - TIME_START) / TIME_TOTAL;
+        const HANDLE = 0.08;
+
+        if (Math.abs(ratioPct - startPct) < HANDLE) {
+          dragMode = 'left';
+        } else if (Math.abs(ratioPct - endPct) < HANDLE) {
+          dragMode = 'right';
+        } else if (ratioPct > startPct && ratioPct < endPct) {
+          dragMode = 'move';
+          dragOriginX = e.clientX;
+          dragOriginStart = selStart;
+          dragOriginEnd = selEnd;
+        } else {
+          dragMode = 'create';
+          selStart = snapHour(clamp(h, TIME_START, TIME_END - 0.25));
+          selEnd = selStart + 1;
+        }
+        updateFill();
+      }
+
+      function onPointerMove(e) {
+        if (!isDragging) return;
+        const rect = bar.getBoundingClientRect();
+        const h = snapHour(clamp(barXtoHour(e.clientX, rect), TIME_START, TIME_END));
+
+        if (dragMode === 'create' || dragMode === 'left') {
+          selStart = clamp(h, TIME_START, selEnd - 0.25);
+        } else if (dragMode === 'right') {
+          selEnd = clamp(h, selStart + 0.25, TIME_END);
+        } else if (dragMode === 'move') {
+          const rect2 = bar.getBoundingClientRect();
+          const delta = ((e.clientX - dragOriginX) / rect2.width) * TIME_TOTAL;
+          const snappedDelta = snapHour(delta * 4) / 4;
+          let ns = dragOriginStart + snappedDelta;
+          let ne = dragOriginEnd + snappedDelta;
+          const span = dragOriginEnd - dragOriginStart;
+          if (ns < TIME_START) { ns = TIME_START; ne = TIME_START + span; }
+          if (ne > TIME_END) { ne = TIME_END; ns = TIME_END - span; }
+          selStart = ns;
+          selEnd = ne;
+        }
+        updateFill();
+      }
+
+      function onPointerUp() {
+        isDragging = false;
+        dragMode = 'none';
+      }
+
+      bar.addEventListener('pointerdown', onPointerDown);
+      bar.addEventListener('pointermove', onPointerMove);
+      bar.addEventListener('pointerup', onPointerUp);
+    }
+
+    function setPreset(s, e) {
+      selStart = s;
+      selEnd = e;
+      updateFill();
+    }
+
+    // ─── Modal ────────────────────────────────────────────
+    function openModal(dateStr, dateObj) {
+      pendingDate = dateStr;
+      selStart = TIME_START;
+      selEnd = TIME_END;
+      selectedPeople = new Set();
+      renderPeopleButtons();
+
+      const thaiDate = `${dateObj.getDate()} ${THAI_MONTHS[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+      document.getElementById('modalTitle').textContent = '📅 เพิ่มงาน';
+      document.getElementById('modalDate').textContent = thaiDate;
+      document.getElementById('taskInput').value = '';
+      updateFill();
+      document.getElementById('modalOverlay').classList.add('open');
+      setTimeout(() => document.getElementById('taskInput').focus(), 200);
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    document.getElementById('modalOverlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    document.getElementById('btnSave').addEventListener('click', saveEntry);
+    document.getElementById('taskInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveEntry();
+    });
+
+    function saveEntry() {
+      const task = document.getElementById('taskInput').value.trim();
+      if (!task) {
+        document.getElementById('taskInput').focus();
+        document.getElementById('taskInput').style.borderColor = '#e53935';
+        setTimeout(() => document.getElementById('taskInput').style.borderColor = '', 1200);
+        return;
+      }
+
+      const people = [...selectedPeople];
+      const entry = {
+        start: hhmm(selStart),
+        end: hhmm(selEnd),
+        task,
+        people,
+        savedAt: new Date().toISOString()
+      };
+
+      if (!workMap[pendingDate]) workMap[pendingDate] = [];
+      workMap[pendingDate].push(entry);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(workMap));
+
+      // Sync to Google Sheets (sheet = "work")
+      const params = new URLSearchParams({
+        sheet: SHEET_NAME,
+        date: pendingDate,
+        start: entry.start,
+        end: entry.end,
+        task,
+        people: people.join(',')
+      });
+      fetch(GS_URL + '?' + params.toString(), { mode: 'no-cors' })
+        .catch(err => console.warn('GS sync failed:', err));
+
+      closeModal();
+      buildGrid(current.getFullYear(), current.getMonth());
+      const whoTxt = people.length ? ` · ${people.join(', ')}` : '';
+      showToast(`✅ บันทึก "${task}" (${entry.start}–${entry.end})${whoTxt}`);
+    }
+
+    // ─── Nav ──────────────────────────────────────────────
+    document.getElementById('btnPrev').addEventListener('click', () => {
+      current.setMonth(current.getMonth() - 1);
+      buildGrid(current.getFullYear(), current.getMonth());
+    });
+    document.getElementById('btnNext').addEventListener('click', () => {
+      current.setMonth(current.getMonth() + 1);
+      buildGrid(current.getFullYear(), current.getMonth());
+    });
+    document.getElementById('btnToday').addEventListener('click', () => {
+      current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+      buildGrid(current.getFullYear(), current.getMonth());
+    });
+
+    // ─── Init ─────────────────────────────────────────────
+    buildTicks();
+    setupTimeline();
+    updateFill();
+    buildGrid(current.getFullYear(), current.getMonth());
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>ตารางงาน QHD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a1628;
+      --bg2: radial-gradient(ellipse at 20% 0%, #1a2d50 0%, #0a1628 65%);
+      --hdr: rgba(255, 255, 255, 0.05);
+      --hdr-txt: #fff;
+      --day-lbl: rgba(255, 255, 255, 0.45);
+      --cell: rgba(255, 255, 255, 0.03);
+      --cell-hov: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.08);
+      --txt: #ddd;
+      --nav: rgba(255, 255, 255, 0.12);
+      --nav-hov: rgba(255, 255, 255, 0.22);
+      --accent: #2979ff;
+      --today-ring: #2979ff;
+      --sun: #ff6b6b;
+      --sat: #80b0ff;
+      --shadow: 0 8px 40px rgba(0, 0, 0, .55);
+      --radius: 18px;
+    }
+
+    :root {
+      --work-1: #1565c0;
+      --work-2: #0277bd;
+      --work-3: #00838f;
+      --work-4: #2e7d32;
+      --work-5: #6a1b9a;
+      --work-6: #ad1457;
+      --work-default: #1565c0;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg2, var(--bg));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 40px;
+    }
+
+    /* Topbar */
+    .topbar {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .app-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--hdr-txt);
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-title .badge {
+      font-size: .72rem;
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .btn-action {
+      padding: 6px 16px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, opacity .2s;
+      display: inline-block;
+    }
+
+    .btn-action:hover {
+      transform: scale(1.05);
+      opacity: .88;
+    }
+
+    .theme-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Calendar */
+    .calendar {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--cell);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+    }
+
+    .cal-header {
+      background: var(--hdr);
+      padding: 20px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .cal-title {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--hdr-txt);
+      letter-spacing: .3px;
+    }
+
+    .cal-title span {
+      color: var(--accent);
+    }
+
+    .nav-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: var(--nav);
+      color: var(--hdr-txt);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, transform .15s, box-shadow .2s;
+    }
+
+    .nav-btn:hover {
+      background: var(--nav-hov);
+      transform: scale(1.1);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .today-btn {
+      padding: 7px 16px;
+      border-radius: 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: 'Sarabun', sans-serif;
+      font-size: .88rem;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+    }
+
+    .today-btn:hover {
+      opacity: .8;
+      transform: scale(1.05);
+    }
+
+    .day-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--hdr);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .day-lbl {
+      text-align: center;
+      padding: 10px 0;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--day-lbl);
+      text-transform: uppercase;
+    }
+
+    .day-lbl.sun {
+      color: var(--sun);
+    }
+
+    .day-lbl.sat {
+      color: var(--sat);
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      animation: fadein .3s ease;
+    }
+
+    .cal-cell {
+      min-height: 140px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 6px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      transition: background .2s;
+      position: relative;
+    }
+
+    .cal-cell:nth-child(7n) {
+      border-right: none;
+    }
+
+    .cal-cell:hover {
+      background: var(--cell-hov);
+    }
+
+    .cal-cell.other-month {
+      opacity: .22;
+      pointer-events: none;
+    }
+
+    .cal-cell.is-today::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 2px solid var(--today-ring);
+      border-radius: 2px;
+      opacity: .5;
+    }
+
+    .day-num {
+      font-size: .9rem;
+      font-weight: 700;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--txt);
+      transition: background .2s, color .2s;
+      margin-bottom: 4px;
+    }
+
+    .cal-cell.is-today .day-num {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .4);
+    }
+
+    .cal-cell.is-sun .day-num {
+      color: var(--sun);
+    }
+
+    .cal-cell.is-sat .day-num {
+      color: var(--sat);
+    }
+
+    .cal-cell.is-sun,
+    .cal-cell.is-holiday {
+      background: rgba(255, 107, 107, 0.04);
+    }
+
+    .cal-cell.is-sat {
+      background: rgba(128, 176, 255, 0.04);
+    }
+
+    .work-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+    }
+
+    /* Work entry chip */
+    .work-chip {
+      border-radius: 7px;
+      padding: 4px 6px;
+      font-size: .75rem;
+      font-weight: 600;
+      background: var(--work-default);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, .25);
+    }
+
+    .wc-time {
+      font-size: .65rem;
+      opacity: .8;
+      font-weight: 500;
+    }
+
+    .wc-task {
+      font-size: .76rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wc-people {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .wc-avatar {
+      font-size: .62rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, .22);
+      padding: 1px 5px;
+      border-radius: 5px;
+      color: #fff;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="app-title">
+      📅 ตารางงาน QHD
+      <span class="badge">ดูปฏิทิน</span>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <a href="work.html" class="btn-action">📝 จัดการตารางงาน</a>
+    </div>
+  </div>
+
+  <div class="calendar">
+    <div class="cal-header">
+      <div class="cal-title" id="calTitle">– <span>–</span></div>
+      <div class="nav-group">
+        <button class="today-btn" id="btnToday">วันนี้</button>
+        <button class="nav-btn" id="btnPrev">&#8249;</button>
+        <button class="nav-btn" id="btnNext">&#8250;</button>
+      </div>
+    </div>
+    <div class="day-labels">
+      <div class="day-lbl sun">อา</div>
+      <div class="day-lbl">จ</div>
+      <div class="day-lbl">อ</div>
+      <div class="day-lbl">พ</div>
+      <div class="day-lbl">พฤ</div>
+      <div class="day-lbl">ศ</div>
+      <div class="day-lbl sat">ส</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'workMap_v1';
+    const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+    const CHIP_COLORS = ['#1565c0', '#0277bd', '#00838f', '#2e7d32', '#6a1b9a', '#ad1457', '#e65100', '#4e342e'];
+
+    const TODAY = new Date();
+    let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+    let workMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+    function fmtDate(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function buildGrid(year, month) {
+      const grid = document.getElementById('calGrid');
+      grid.style.animation = 'none';
+      grid.offsetHeight;
+      grid.style.animation = '';
+      grid.innerHTML = '';
+
+      const first = new Date(year, month, 1);
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const startDow = first.getDay();
+      const prevLast = new Date(year, month, 0).getDate();
+
+      for (let i = startDow - 1; i >= 0; i--) addCell(prevLast - i, true, new Date(year, month - 1, prevLast - i));
+      for (let d = 1; d <= totalDays; d++) addCell(d, false, new Date(year, month, d));
+      const filled = startDow + totalDays;
+      const total = Math.ceil(filled / 7) * 7;
+      for (let i = 1; i <= total - filled; i++) addCell(i, true, new Date(year, month + 1, i));
+
+      document.getElementById('calTitle').innerHTML = `${THAI_MONTHS[month]} <span>${year + 543}</span>`;
+    }
+
+    function addCell(dayNum, otherMonth, dateObj) {
+      const grid = document.getElementById('calGrid');
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell';
+      if (otherMonth) cell.classList.add('other-month');
+
+      const dow = dateObj.getDay();
+      if (dow === 0) cell.classList.add('is-sun');
+      if (dow === 6) cell.classList.add('is-sat');
+
+      const isToday = !otherMonth &&
+        dateObj.getFullYear() === TODAY.getFullYear() &&
+        dateObj.getMonth() === TODAY.getMonth() &&
+        dateObj.getDate() === TODAY.getDate();
+      if (isToday) cell.classList.add('is-today');
+
+      const num = document.createElement('div');
+      num.className = 'day-num';
+      num.textContent = dayNum;
+      cell.appendChild(num);
+
+      const dateStr = fmtDate(dateObj);
+      const entries = workMap[dateStr] || [];
+
+      const entriesDiv = document.createElement('div');
+      entriesDiv.className = 'work-entries';
+
+      entries.forEach((e, idx) => {
+        const chip = document.createElement('div');
+        chip.className = 'work-chip';
+        chip.style.background = CHIP_COLORS[idx % CHIP_COLORS.length];
+        const peopleHtml = (e.people && e.people.length)
+          ? `<div class="wc-people">${e.people.map(p => `<span class="wc-avatar">${p}</span>`).join('')}</div>`
+          : '';
+        chip.innerHTML = `<span class="wc-time">⏰ ${e.start}–${e.end}</span><span class="wc-task">${e.task}</span>${peopleHtml}`;
+        entriesDiv.appendChild(chip);
+      });
+
+      cell.appendChild(entriesDiv);
+      grid.appendChild(cell);
+    }
+
+    document.getElementById('btnPrev').addEventListener('click', () => {
+      current.setMonth(current.getMonth() - 1);
+      buildGrid(current.getFullYear(), current.getMonth());
+    });
+    document.getElementById('btnNext').addEventListener('click', () => {
+      current.setMonth(current.getMonth() + 1);
+      buildGrid(current.getFullYear(), current.getMonth());
+    });
+    document.getElementById('btnToday').addEventListener('click', () => {
+      current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+      buildGrid(current.getFullYear(), current.getMonth());
+    });
+
+    buildGrid(current.getFullYear(), current.getMonth());
+
+    // Auto-refresh when coming back from work.html
+    window.addEventListener('focus', () => {
+      workMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      buildGrid(current.getFullYear(), current.getMonth());
+    });
+  </script>
+
+</body>
+
+</html>
