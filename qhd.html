@@ -371,6 +371,10 @@
     </div>
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
       <a href="work.html" class="btn-action">📝 จัดการตารางงาน</a>
+      <button onclick="if(confirm('ยืนยันล้างข้อมูลในเครื่องทั้งหมด? (ข้อมูลใน Sheet จะไม่หาย)')){ localStorage.removeItem('workMap_v1'); location.reload(); }" 
+              class="btn-action" style="background:#e53935; border:none; cursor:pointer;">
+        🔄 Refresh
+      </button>
     </div>
   </div>
 

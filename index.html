@@ -585,6 +585,10 @@
       <a href="edit.html" class="btn-action">✏️ จัดการเวร</a>
       <a href="move.html" class="btn-action" style="background:#00897b;">🔄 แลกเวร</a>
       <a href="qhd.html" class="btn-action" style="background:#1565c0;">📅 ตารางงาน</a>
+      <button onclick="if(confirm('ยืนยันล้างข้อมูลในเครื่องทั้งหมด? (ข้อมูลใน Sheet จะไม่หาย)')){ localStorage.removeItem('dutyMap_v1'); localStorage.removeItem('swapMap_v1'); location.reload(); }" 
+              class="btn-action" style="background:#e53935; border:none; cursor:pointer;">
+        🔄 Refresh
+      </button>
       <span class="theme-label" style="margin-left: 8px;">🎨</span>
       <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic">
       </div>
