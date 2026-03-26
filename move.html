@@ -659,6 +659,57 @@
       color: #fff;
     }
 
+    /* ── Pick-back overlay (step 3) ── */
+    .pick-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1100;
+      backdrop-filter: blur(7px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .pick-overlay.open { opacity:1; pointer-events:all; }
+    .pick-box {
+      background: var(--modal-bg, #1a1530);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 26px;
+      width: 92%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.7);
+      transform: translateY(18px) scale(.97);
+      transition: transform .25s ease;
+    }
+    .pick-overlay.open .pick-box { transform: translateY(0) scale(1); }
+    .pick-title { font-size:.95rem; font-weight:700; color:var(--hdr-txt); margin-bottom:4px; }
+    .pick-sub   { font-size:.8rem; color:var(--day-lbl); margin-bottom:16px; line-height:1.5; }
+    .pick-list  { display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; }
+    .pick-chip {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px; border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      cursor:pointer; transition:background .15s, border-color .15s;
+      font-size:.88rem; color:var(--hdr-txt);
+    }
+    .pick-chip:hover { background:rgba(41,121,255,.18); border-color:var(--accent); }
+    .pick-chip .pc-date { font-weight:700; flex:1; }
+    .pick-chip .pc-shift { font-size:.78rem; color:var(--day-lbl); }
+    .pick-none { color:var(--day-lbl); font-size:.85rem; text-align:center; padding:14px 0; }
+    .pick-cancel-btn {
+      margin-top:14px; width:100%; padding:10px;
+      border-radius:12px; border:1px solid var(--border);
+      background:rgba(255,255,255,.06); color:var(--day-lbl);
+      font-family:'Sarabun',sans-serif; font-size:.9rem;
+      cursor:pointer; transition:background .2s;
+    }
+    .pick-cancel-btn:hover { background:rgba(255,255,255,.12); }
+
     /* ── Confirm Modal ── */
     .modal-overlay {
       position: fixed;
@@ -980,6 +1031,16 @@
     </table>
   </div>
 
+  <!-- Step 3: pick-back overlay -->
+  <div class="pick-overlay" id="pickOverlay">
+    <div class="pick-box">
+      <div class="pick-title">🔄 เลือกเวรของ <span id="pickRequesterName">–</span> ที่จะให้แลก</div>
+      <div class="pick-sub" id="pickSub">–</div>
+      <div class="pick-list" id="pickList"></div>
+      <button class="pick-cancel-btn" onclick="closePickOverlay()">ยกเลิก</button>
+    </div>
+  </div>
+
   <!-- Confirm modal -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
@@ -1135,7 +1196,14 @@
             // Normal chip – clickable to swap
             chip.innerHTML = `<span class="chip-icon">${icon}</span><span class="chip-name">${name}</span>`;
             if (!otherMonth) {
-              chip.addEventListener('click', () => openModal(dateStr, key, s, name, dateObj));
+              chip.addEventListener('click', () => {
+                // Block self-swap
+                if (name === requester) {
+                  showToast('⚠️ ไม่สามารถแลกเวรกับตัวเองได้', true);
+                  return;
+                }
+                openPickBack(dateStr, key, s, name, dateObj);
+              });
             }
           }
           shiftsDiv.appendChild(chip);
@@ -1146,24 +1214,95 @@
       grid.appendChild(cell);
     }
 
-    /* ─── Confirm modal ─── */
-    function openModal(dateStr, shift, slot, originalName, dateObj) {
-      const thaiDate = `${dateObj.getDate()} ${THAI_MONTHS[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+    /* ─── Step 3: Pick-back (requester selects their own shift to give) ─── */
+    let targetSwap = null; // the shift requester wants to get
+
+    function openPickBack(dateStr, shift, slot, originalName, dateObj) {
+      targetSwap = { dateStr, shift, slot, originalName, dateObj };
       const shiftDef = SHIFTS.find(s => s.key === shift);
-      const slotTxt = shiftDef.slots > 1 ? ` ช่อง ${slot}` : '';
+      const slotTxt  = shiftDef.slots > 1 ? ` ช่อง ${slot}` : '';
+      const tDate    = `${dateObj.getDate()} ${THAI_MONTHS[dateObj.getMonth()]} ${dateObj.getFullYear()+543}`;
+      document.getElementById('pickRequesterName').textContent = requester;
+      document.getElementById('pickSub').innerHTML =
+        `ต้องการแลกเวร <strong>${originalName}</strong> · ${shiftDef.icon}${shift}${slotTxt} · ${tDate}<br>เลือกเวรของคุณที่จะให้แลกคืน`;
+      buildPickList();
+      document.getElementById('pickOverlay').classList.add('open');
+    }
 
-      document.getElementById('modalSub').textContent = `${shiftDef.icon} เวร${shift}${slotTxt} · ${thaiDate}`;
+    function closePickOverlay() {
+      document.getElementById('pickOverlay').classList.remove('open');
+    }
+
+    function buildPickList() {
+      const list = document.getElementById('pickList');
+      list.innerHTML = '';
+      const myShifts = [];
+      // Scan whole dutyMap for requester's shifts not already swapped
+      Object.entries(dutyMap).forEach(([dk, name]) => {
+        if (name !== requester) return;
+        if (swapMap[dk]) return; // already swapped
+        // dk format: dateStr|shift|slot
+        const parts = dk.split('|');
+        if (parts.length < 3) return;
+        const [ds, sh, sl] = parts;
+        myShifts.push({ dk, dateStr: ds, shift: sh, slot: parseInt(sl) });
+      });
+      myShifts.sort((a,b) => a.dateStr.localeCompare(b.dateStr));
+      if (!myShifts.length) {
+        list.innerHTML = '<div class="pick-none">ไม่พบเวรของคุณที่สามารถแลกได้</div>';
+        return;
+      }
+      const SHIFT_ICONS = { 'เช้า':'🌅', 'บ่าย':'🌤', 'ดึก':'🌙' };
+      myShifts.forEach(({ dk, dateStr: ds, shift, slot }) => {
+        const d = new Date(ds);
+        const dateLabel = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
+        const shiftDef  = SHIFTS.find(s => s.key === shift);
+        const slotTxt   = shiftDef && shiftDef.slots > 1 ? ` ช่อง ${slot}` : '';
+        const icon = SHIFT_ICONS[shift] || '';
+        const chip = document.createElement('div');
+        chip.className = 'pick-chip';
+        chip.innerHTML = `<span class="pc-date">${icon} ${dateLabel}</span><span class="pc-shift">เวร${shift}${slotTxt}</span>`;
+        chip.addEventListener('click', () => {
+          closePickOverlay();
+          openModal(targetSwap, { dk, dateStr: ds, shift, slot });
+        });
+        list.appendChild(chip);
+      });
+    }
+
+    /* ─── Confirm modal ─── */
+    function openModal(target, mine) {
+      const { dateStr, shift, slot, originalName, dateObj } = target;
+      const mineDate = new Date(mine.dateStr);
+      const shiftDef  = SHIFTS.find(s => s.key === shift);
+      const slotTxt   = shiftDef.slots > 1 ? ` ช่อง ${slot}` : '';
+      const mineSD    = SHIFTS.find(s => s.key === mine.shift);
+      const mineST    = mineSD && mineSD.slots > 1 ? ` ช่อง ${mine.slot}` : '';
+      const thaiDate  = `${dateObj.getDate()} ${THAI_MONTHS[dateObj.getMonth()]} ${dateObj.getFullYear()+543}`;
+      const mineDate2 = `${mineDate.getDate()} ${THAI_MONTHS[mineDate.getMonth()]} ${mineDate.getFullYear()+543}`;
+
+      document.getElementById('modalSub').textContent = `ตรวจสอบและยืนยันการแลก`;
       document.getElementById('swapPreview').innerHTML = `
-        <div><span class="label">ชื่อเดิม: </span><span class="val from-name">${originalName}</span></div>
-        <div class="arrow-row">
-          <span style="color:var(--day-lbl);">แลกให้: </span>
-          <span class="to-name">${requester}</span>
+        <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+          <div style="font-size:.75rem;color:var(--day-lbl);margin-bottom:4px;">📥 คุณได้รับ</div>
+          <div><span class="label">${shiftDef.icon} เวร${shift}${slotTxt} · ${thaiDate}</span></div>
+          <div style="margin-top:4px;">
+            <span class="from-name" style="text-decoration:line-through;opacity:.55;font-size:.85rem;">${originalName}</span>
+            <span style="margin:0 6px;opacity:.5;">→</span>
+            <strong style="color:#4db6ac;">${requester}</strong>
+          </div>
         </div>
-        <div style="margin-top:8px;"><span class="label">วันที่: </span><span class="val">${thaiDate}</span></div>
-        <div><span class="label">กะ: </span><span class="val">${shift}${slotTxt}</span></div>
+        <div>
+          <div style="font-size:.75rem;color:var(--day-lbl);margin-bottom:4px;">📤 คุณให้</div>
+          <div><span class="label">${mineSD ? mineSD.icon : ''} เวร${mine.shift}${mineST} · ${mineDate2}</span></div>
+          <div style="margin-top:4px;">
+            <span class="from-name" style="text-decoration:line-through;opacity:.55;font-size:.85rem;">${requester}</span>
+            <span style="margin:0 6px;opacity:.5;">→</span>
+            <strong style="color:#ff8a65;">${originalName}</strong>
+          </div>
+        </div>
       `;
-
-      pendingSwap = { dateStr, shift, slot, originalName, thaiDate, slotTxt };
+      pendingSwap = { target, mine, thaiDate, slotTxt, mineDate2, mineST, originalName };
       document.getElementById('btnConfirm').onclick = confirmSwap;
       document.getElementById('modalOverlay').classList.add('open');
     }
@@ -1174,35 +1313,25 @@
 
     function confirmSwap() {
       closeModal();
-      const { dateStr, shift, slot, originalName, thaiDate, slotTxt } = pendingSwap;
-      const dk = dutyKey(dateStr, shift, slot);
+      const { target, mine, originalName } = pendingSwap;
+      const { dateStr, shift, slot } = target;
+      const dk  = dutyKey(dateStr, shift, slot);
+      const dk2 = mine.dk;
+      const now = new Date().toISOString();
 
-      // Save swap locally
-      swapMap[dk] = {
-        original: originalName,
-        requester: requester,
-        date: dateStr,
-        shift,
-        slot,
-        savedAt: new Date().toISOString()
-      };
+      // Save both sides
+      swapMap[dk] = { original: originalName, requester, date: dateStr, shift, slot, savedAt: now };
+      swapMap[dk2] = { original: requester, requester: originalName, date: mine.dateStr, shift: mine.shift, slot: mine.slot, savedAt: now };
       localStorage.setItem(SWAP_KEY, JSON.stringify(swapMap));
 
-      // Send to Google Sheets
-      const params = new URLSearchParams({
-        action: 'swap',
-        date: dateStr,
-        shift,
-        slot,
-        name: originalName,
-        requester
-      });
-      fetch(GS_URL + '?' + params.toString(), { mode: 'no-cors' })
-        .catch(err => console.warn('GS sync failed:', err));
+      // Send to Google Sheets (both sides)
+      [{ action:'swap', date:dateStr, shift, slot, name:originalName, requester },
+       { action:'swap', date:mine.dateStr, shift:mine.shift, slot:mine.slot, name:requester, requester:originalName }]
+      .forEach(p => { new Image().src = GS_URL + '?' + new URLSearchParams(p).toString(); });
 
       buildGrid(current.getFullYear(), current.getMonth());
       renderLog();
-      showToast(`✅ แลกเวร ${originalName} → ${requester} สำเร็จ`);
+      showToast(`✅ แลกเวร ${originalName} ↔ ${requester} สำเร็จ`);
     }
 
     /* ─── Swap log ─── */
