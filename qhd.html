@@ -593,8 +593,10 @@
       buildGrid(current.getFullYear(), current.getMonth());
     });
 
-    async function syncFromCloud() {
-      if(!confirm('ยืนยันดึงข้อมูลล่าสุดจาก Google Sheets? (จะโหลดมาทับข้อมูลในเครื่อง)')) return;
+    const AUTO_SYNC_MINUTES = 30;
+
+    async function syncFromCloud(isAuto = false) {
+      if(!isAuto && !confirm('ยืนยันดึงข้อมูลล่าสุดจาก Google Sheets? (จะโหลดมาทับข้อมูลในเครื่อง)')) return;
       
       const btn = document.querySelector('button[onclick="syncFromCloud()"]');
       const oldTxt = btn.innerHTML;
@@ -627,17 +629,27 @@
             });
           }
           localStorage.setItem(STORAGE_KEY, JSON.stringify(wMap));
-          location.reload();
+          workMap = wMap; // Update global
+          
+          buildGrid(current.getFullYear(), current.getMonth());
+          
+          btn.innerHTML = oldTxt;
+          btn.style.opacity = '1';
+          btn.disabled = false;
         } else {
           throw new Error('Invalid status from server');
         }
       } catch (err) {
-        alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message + '\n\n** โปรดนำโค้ดใน main.js ไปอัปเดต Deploy (New version) บน Google Apps Script ก่อน **');
+        if(!isAuto) alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message + '\n\n** โปรดนำโค้ดใน main.js ไปอัปเดต Deploy (New version) บน Google Apps Script ก่อน **');
         btn.innerHTML = oldTxt;
         btn.style.opacity = '1';
         btn.disabled = false;
       }
     }
+
+    // Auto Refresh
+    syncFromCloud(true);
+    setInterval(() => syncFromCloud(true), AUTO_SYNC_MINUTES * 60 * 1000);
   </script>
 
 </body>
