@@ -1391,6 +1391,11 @@
         delete swapMap[dk];
       });
       localStorage.setItem(SWAP_KEY, JSON.stringify(swapMap));
+      
+      // ส่งไปลบใน Sheet
+      const p = { action: 'cancelSwap', dks: dksRaw };
+      new Image().src = GS_URL + '?' + new URLSearchParams(p).toString();
+
       buildGrid(current.getFullYear(), current.getMonth());
       renderLog();
       showToast(`↩ ยกเลิกการแลกเวรแล้ว`);

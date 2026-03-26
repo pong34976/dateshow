@@ -830,7 +830,7 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch(GS_URL + '?action=sync');
+        const res = await fetch(GS_URL + '?action=sync&t=' + Date.now());
         const json = await res.json();
         
         if (json.status === 'ok') {
