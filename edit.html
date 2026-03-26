@@ -649,7 +649,7 @@
     // บันทึกลง Google Sheets (แบบ GET)
     function saveToSheets(date, shift, slot, name) {
       const params = new URLSearchParams({ date, shift, slot, name });
-      fetch(GS_URL + '?' + params.toString(), { mode: 'no-cors' })
+      fetch(GS_URL + '?' + params.toString() + '&t=' + Date.now(), { mode: 'no-cors' })
         .catch(err => console.warn('Sheets sync failed:', err));
     }
 
