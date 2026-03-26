@@ -416,6 +416,64 @@
       content: ''; position: absolute; top:0; right:0; bottom:0; left: 0;
       background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 100%);
     }
+
+    /* ─── Timeline ─── */
+    .timeline-container {
+      width: 100%; max-width: 1100px; margin: 0 auto 20px; padding: 24px;
+      background: var(--cell); border-radius: var(--radius);
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .tl-header {
+      font-size: 1.15rem; font-weight: 700; color: var(--text);
+      margin-bottom: 24px; display: flex; align-items: center; gap: 8px;
+    }
+    .tl-list {
+      display: flex; flex-direction: column; gap: 16px; position: relative;
+    }
+    .tl-list::after {
+      content: ''; position: absolute; left: 16px; top: 20px; bottom: 20px;
+      width: 2px; background: var(--border); z-index: 1;
+    }
+    .tl-row {
+      display: flex; gap: 16px; position: relative; z-index: 2;
+    }
+    .tl-dot-wrap {
+      width: 34px; flex-shrink: 0; display: flex; justify-content: center; padding-top: 18px;
+    }
+    .tl-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--bg); border: 3px solid var(--accent);
+      position: relative; z-index: 2; transition: all 0.3s;
+    }
+    .tl-row.completed .tl-dot {
+      border-color: #16a34a; background: #16a34a;
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
+    }
+    .tl-card {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 16px; padding: 18px 20px; position: relative;
+      overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .tl-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+    .tl-row.completed .tl-card {
+      background: #f0fdf4; border-color: #bbf7d0;
+    }
+    .tl-date { font-size: 0.82rem; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+    .tl-row.completed .tl-date { color: #16a34a; }
+    .tl-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .tl-row.completed .tl-title { color: #15803d; text-decoration: line-through; opacity: 0.8; }
+    .tl-time {
+      font-size: 0.8rem; background: rgba(0,0,0,0.04);
+      padding: 3px 8px; border-radius: 10px; font-weight: 600; color: var(--sub);
+    }
+    .tl-row.completed .tl-time { background: rgba(22,163,74,0.1); color: #16a34a; }
+    .tl-watermark {
+      position: absolute; right: 10px; bottom: -10px;
+      font-size: 5.5rem; color: #16a34a; opacity: 0;
+      pointer-events: none; transform: rotate(-15deg);
+      user-select: none; transition: opacity 0.3s;
+    }
+    .tl-row.completed .tl-watermark { opacity: 0.08; }
   </style>
 </head>
 
@@ -464,6 +522,12 @@
     <div class="vector-bar">
       <div class="vector-fill" id="vectorFill"></div>
     </div>
+  </div>
+
+  <!-- ไทม์ไลน์งาน (Timeline) -->
+  <div class="timeline-container" id="timelineUI">
+    <div class="tl-header">📍 ไทม์ไลน์งานที่ต้องทำ</div>
+    <div class="tl-list" id="tlList"></div>
   </div>
 
   <!-- Modal สำหรับดูรายละเอียดงาน -->
@@ -523,6 +587,10 @@
       for (let i = 1; i <= total - filled; i++) addCell(i, true, new Date(year, month + 1, i));
 
       document.getElementById('calTitle').innerHTML = `${THAI_MONTHS[month]} <span>${year + 543}</span>`;
+      
+      // Update vector progress & timeline
+      updateVectorProgress(year, month);
+      buildTimeline(year, month);
     }
 
     function addCell(dayNum, otherMonth, dateObj) {
@@ -547,7 +615,7 @@
       cell.appendChild(num);
 
       const dateStr = fmtDate(dateObj);
-      const entries = workMap[dateStr] || [];
+      const entries = (workMap[dateStr] || []).slice().sort((a,b) => (a.start || "").localeCompare(b.start || ""));
 
       const entriesDiv = document.createElement('div');
       entriesDiv.className = 'work-entries';
@@ -582,6 +650,72 @@
 
       cell.appendChild(entriesDiv);
       grid.appendChild(cell);
+    }
+
+    function updateVectorProgress(year, month) {
+      const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+      let total = 0;
+      let completed = 0;
+      Object.keys(workMap).forEach(dateStr => {
+        if (dateStr.startsWith(prefix)) {
+          total += workMap[dateStr].length;
+          completed += workMap[dateStr].filter(t => t.status === 'สำเร็จ').length;
+        }
+      });
+      const pt = total === 0 ? 0 : Math.round((completed / total) * 100);
+      document.getElementById('progressText').textContent = `${pt}%`;
+      document.getElementById('vectorFill').style.width = `${pt}%`;
+    }
+
+    function buildTimeline(year, month) {
+      const tlList = document.getElementById('tlList');
+      tlList.innerHTML = '';
+      
+      const allTasks = [];
+      const prefix = `${year}-${String(month+1).padStart(2, '0')}`;
+      
+      Object.keys(workMap).forEach(dateStr => {
+        if (dateStr.startsWith(prefix)) {
+          workMap[dateStr].forEach(t => allTasks.push(t));
+        }
+      });
+      
+      if (allTasks.length === 0) {
+        tlList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--sub); font-size:0.95rem;">ยังไม่มีงานในเดือนนี้ ขีดเส้นใต้ความว่างเปล่า... 😅</div>';
+        return;
+      }
+      
+      allTasks.sort((a,b) => {
+        if (a.dateStr !== b.dateStr) return a.dateStr.localeCompare(b.dateStr);
+        return (a.start||'').localeCompare(b.start||'');
+      });
+      
+      allTasks.forEach(t => {
+        const [y,m,d] = t.dateStr.split('-');
+        const thDate = `${parseInt(d)} ${THAI_MONTHS[parseInt(m)-1]} ${parseInt(y)+543}`;
+        const isCompleted = t.status === 'สำเร็จ';
+        const wmPeopleHtml = (t.people && t.people.length) 
+           ? t.people.map(p => `👤 ${p}`).join(', ') 
+           : '-';
+
+        const row = document.createElement('div');
+        row.className = 'tl-row' + (isCompleted ? ' completed' : '');
+        row.style.cursor = 'pointer';
+        row.onclick = () => showWorkDetails(t);
+        row.innerHTML = `
+          <div class="tl-dot-wrap"><div class="tl-dot"></div></div>
+          <div class="tl-card">
+            <div class="tl-watermark">✓</div>
+            <div class="tl-date">📅 ${thDate}</div>
+            <div class="tl-title">${isCompleted ? '✅ ' : ''}${t.task}</div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <div class="tl-time">⏰ ${t.start} – ${t.end}</div>
+              <div style="font-size:0.8rem; color:var(--sub); font-weight:600;">ผู้ร่วมงาน: ${wmPeopleHtml}</div>
+            </div>
+          </div>
+        `;
+        tlList.appendChild(row);
+      });
     }
 
     document.getElementById('btnPrev').addEventListener('click', () => {

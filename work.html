@@ -886,7 +886,7 @@
       cell.appendChild(num);
 
       const dateStr = fmtDate(dateObj);
-      const entries = workMap[dateStr] || [];
+      const entries = (workMap[dateStr] || []).slice().sort((a,b) => (a.start || "").localeCompare(b.start || ""));
 
       const entriesDiv = document.createElement('div');
       entriesDiv.className = 'work-entries';
