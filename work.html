@@ -759,7 +759,7 @@
     // ═══════════════════════════════════════
     //  CONFIG
     // ═══════════════════════════════════════
-    const GS_URL = "https://script.google.com/macros/s/AKfycbxhYd-zD7f8SsWsGNcOWUHZI_94IZUqHFFa8lE2Ugv2PHYHDctqzPycBYKu4zp9Ol0P/exec";
+    const GS_URL = "https://script.google.com/macros/s/AKfycbxwkcBPudJEr_FfHrLvaEOrPjzdu3wC9G3HUHOue_cc--zLoPGVcQNDMS8Tgrv1Q3lx/exec";
     const STORAGE_KEY = 'workMap_v1';
     const SHEET_NAME = 'work';
     // ═══════════════════════════════════════
@@ -1089,7 +1089,7 @@
       workMap[pendingDate].push(entry);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(workMap));
 
-      // Sync to Google Sheets (sheet = "work")
+      // ส่งข้อมูลไป Google Sheets ด้วย Image pixel (ทำงานได้แม้เปิดจาก file://)
       const params = new URLSearchParams({
         sheet: SHEET_NAME,
         date: pendingDate,
@@ -1098,8 +1098,7 @@
         task,
         people: people.join(',')
       });
-      fetch(GS_URL + '?' + params.toString(), { mode: 'no-cors' })
-        .catch(err => console.warn('GS sync failed:', err));
+      new Image().src = GS_URL + '?' + params.toString();
 
       closeModal();
       buildGrid(current.getFullYear(), current.getMonth());
