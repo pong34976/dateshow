@@ -371,8 +371,7 @@
     </div>
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
       <a href="work.html" class="btn-action">📝 จัดการตารางงาน</a>
-      <button onclick="if(confirm('ยืนยันล้างข้อมูลในเครื่องทั้งหมด? (ข้อมูลใน Sheet จะไม่หาย)')){ localStorage.removeItem('workMap_v1'); location.reload(); }" 
-              class="btn-action" style="background:#e53935; border:none; cursor:pointer;">
+      <button onclick="syncFromCloud()" class="btn-action" style="background:#e53935; border:none; cursor:pointer;">
         🔄 Refresh
       </button>
     </div>
@@ -400,6 +399,7 @@
   </div>
 
   <script>
+    const GS_URL = 'https://script.google.com/macros/s/AKfycbxwkcBPudJEr_FfHrLvaEOrPjzdu3wC9G3HUHOue_cc--zLoPGVcQNDMS8Tgrv1Q3lx/exec';
     const STORAGE_KEY = 'workMap_v1';
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -497,6 +497,52 @@
       workMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
       buildGrid(current.getFullYear(), current.getMonth());
     });
+
+    async function syncFromCloud() {
+      if(!confirm('ยืนยันดึงข้อมูลล่าสุดจาก Google Sheets? (จะโหลดมาทับข้อมูลในเครื่อง)')) return;
+      
+      const btn = document.querySelector('button[onclick="syncFromCloud()"]');
+      const oldTxt = btn.innerHTML;
+      btn.innerHTML = '⏳ โหลด...';
+      btn.style.opacity = '0.7';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(GS_URL + '?action=sync');
+        const json = await res.json();
+        
+        if (json.status === 'ok') {
+          const wMap = {};
+          const wRows = json.data.works;
+          if (wRows && wRows.length > 1) {
+            wRows.slice(1).forEach((r, idx) => {
+              if (r.length >= 6 && r[1]) {
+                const dateStr = r[1];
+                if (!wMap[dateStr]) wMap[dateStr] = [];
+                const id = 'gs-' + idx;
+                wMap[dateStr].push({
+                  id: id,
+                  dateStr: dateStr,
+                  start: r[2] || '',
+                  end: r[3] || '',
+                  task: r[4] || '',
+                  people: r[5] ? r[5].split(',') : []
+                });
+              }
+            });
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(wMap));
+          location.reload();
+        } else {
+          throw new Error('Invalid status from server');
+        }
+      } catch (err) {
+        alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message + '\n\n** โปรดนำโค้ดใน main.js ไปอัปเดต Deploy (New version) บน Google Apps Script ก่อน **');
+        btn.innerHTML = oldTxt;
+        btn.style.opacity = '1';
+        btn.disabled = false;
+      }
+    }
   </script>
 
 </body>
