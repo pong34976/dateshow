@@ -372,6 +372,35 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
+    /* Swap display */
+    .view-shift.is-swapped {
+      flex-direction: column;
+      gap: 1px;
+      padding: 5px 5px;
+      position: relative;
+    }
+    .swap-old {
+      text-decoration: line-through;
+      opacity: .55;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+    .swap-new {
+      font-size: .85rem;
+      font-weight: 800;
+    }
+    .swap-badge-idx {
+      position: absolute;
+      top: 2px; right: 3px;
+      background: #00897b;
+      color: #fff;
+      font-size: .5rem;
+      padding: 1px 4px;
+      border-radius: 5px;
+      font-weight: 700;
+      letter-spacing: .3px;
+    }
+
     .cal-cell.is-sun, .cal-cell.is-holiday { background: rgba(255, 107, 107, 0.05); }
     .cal-cell.is-sat { background: rgba(128, 176, 255, 0.05); }
     .cal-cell.is-sun:hover, .cal-cell.is-holiday:hover { background: rgba(255, 107, 107, 0.1); }
@@ -396,6 +425,7 @@
     </div>
     <div class="theme-bar">
       <a href="edit.html" class="btn-action">✏️ จัดการเวร</a>
+      <a href="move.html" class="btn-action" style="background:#00897b;">🔄 แลกเวร</a>
       <span class="theme-label" style="margin-left: 8px;">🎨</span>
       <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic"></div>
       <div class="swatch" data-theme="paper" style="background:linear-gradient(135deg,#795548,#f0ebe1)" title="Paper"></div>
@@ -428,6 +458,7 @@
 
   <script>
     const STORAGE_KEY = 'dutyMap_v1';
+    const SWAP_KEY    = 'swapMap_v1';
 
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -440,8 +471,8 @@
     const TODAY = new Date();
     let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
 
-    // โหลดข้อมูลจาก localStorage ไม่ใช่ MySQL
     let dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    let swapMap = JSON.parse(localStorage.getItem(SWAP_KEY)    || '{}');
 
     function fmtDate(d) {
       const y = d.getFullYear();
@@ -539,11 +570,25 @@
           const name = dutyMap[dutyKey(dateStr, key, s)] || '';
           if (name) {
             hasAnyShift = true;
-            const html = `
-              <a href="view.html?u=${name}" class="view-shift" style="background: ${bgColor}; color: ${textColor}; text-shadow: ${textShadow}; text-decoration: none; margin-bottom: 4px;" title="${key} - ${name}">
-                <span>${icon} ${name}</span>
-              </a>
-            `;
+            const dk        = dutyKey(dateStr, key, s);
+            const swapEntry = swapMap[dk];
+            let html;
+            if (swapEntry) {
+              // แสดงชื่อเดิม (ขีดฆ่า) + ชื่อใหม่
+              html = `
+                <div class="view-shift is-swapped" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;" title="${key} - แลกเวร: ${swapEntry.original} → ${swapEntry.requester}">
+                  <span class="swap-badge-idx">แลก</span>
+                  <span class="swap-old">${icon} ${swapEntry.original}</span>
+                  <span class="swap-new">${swapEntry.requester}</span>
+                </div>
+              `;
+            } else {
+              html = `
+                <a href="view.html?u=${name}" class="view-shift" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};text-decoration:none;margin-bottom:4px;" title="${key} - ${name}">
+                  <span>${icon} ${name}</span>
+                </a>
+              `;
+            }
             shiftsDiv.insertAdjacentHTML('beforeend', html);
           }
         }
