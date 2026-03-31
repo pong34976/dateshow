@@ -480,11 +480,7 @@
       background: rgba(255, 255, 255, .06);
     }
 
-    .staff-btn:hover { transform: scale(1.06); box-shadow: 0 4px 16px rgba(0, 0, 0, .4); }
-    .staff-btn.joe { color: var(--c-joe); border-color: var(--c-joe); }
-    .staff-btn.wan { color: var(--c-wan); border-color: var(--c-wan); }
-    .staff-btn.flook { color: var(--c-flook); border-color: var(--c-flook); }
-    .staff-btn.ae { color: var(--c-ae); border-color: var(--c-ae); }
+    .staff-btn:hover { transform: scale(1.06); box-shadow: 0 4px 16px rgba(0, 0, 0, .4); background: rgba(255, 255, 255, .1); }
     .staff-btn.clear { color: var(--day-lbl); border-color: var(--border); grid-column: 1/-1; font-size: .85rem; }
 
     .modal-close {
@@ -558,11 +554,8 @@
       📋 จัดการเวร
       <span class="badge">แก้ไข</span>
     </div>
-    <div class="legend">
-      <a href="view.html?u=joe" class="leg-chip" title="ดูเวร โจ้"><div class="leg-dot" style="background:var(--c-joe)"></div>โจ้</a>
-      <a href="view.html?u=wan" class="leg-chip" title="ดูเวร ว่าน"><div class="leg-dot" style="background:var(--c-wan)"></div>ว่าน</a>
-      <a href="view.html?u=flook" class="leg-chip" title="ดูเวร ฟลุ๊ค"><div class="leg-dot" style="background:var(--c-flook)"></div>ฟลุ๊ค</a>
-      <a href="view.html?u=ae" class="leg-chip" title="ดูเวร เอ้"><div class="leg-dot" style="background:var(--c-ae)"></div>เอ้</a>
+    <div class="legend" id="staffLegend">
+      <!-- ตำนานจะกูสร้างจาก JS อัตโนมัติ -->
     </div>
     <div class="theme-bar">
       <span class="theme-label">🎨</span>
@@ -599,12 +592,8 @@
     <div class="modal">
       <div class="modal-title" id="modalTitle">เลือกผู้รับเวร</div>
       <div class="modal-sub" id="modalSub"></div>
-      <div class="staff-grid">
-        <button class="staff-btn joe" onclick="assign('โจ้')">👤 โจ้</button>
-        <button class="staff-btn wan" onclick="assign('ว่าน')">👤 ว่าน</button>
-        <button class="staff-btn flook" onclick="assign('ฟลุ๊ค')">👤 ฟลุ๊ค</button>
-        <button class="staff-btn ae" onclick="assign('เอ้')">👤 เอ้</button>
-        <button class="staff-btn clear" onclick="assign('')">🗑 ล้างออก</button>
+      <div class="staff-grid" id="staffGrid">
+        <!-- สร้างจาก JS -->
       </div>
       <button class="modal-close" onclick="closeModal()">ยกเลิก</button>
     </div>
@@ -627,7 +616,13 @@
       { key: 'บ่าย', cls: 'afternoon', icon: '☀️', slots: 2 },
       { key: 'ดึก', cls: 'night', icon: '🌙', slots: 1 },
     ];
-    const STAFF_CLASS = { 'โจ้': 'joe', 'ว่าน': 'wan', 'ฟลุ๊ค': 'flook', 'เอ้': 'ae' };
+    const DEFAULT_STAFF = {
+      'โจ้': { name: 'โจ้', color: '#a78bfa' },
+      'ว่าน': { name: 'ว่าน', color: '#34d399' },
+      'ฟลุ๊ค': { name: 'ฟลุ๊ค', color: '#60a5fa' },
+      'เอ้': { name: 'เอ้', color: '#fbbf24' }
+    };
+    let staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
 
     const TODAY = new Date();
     let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
@@ -672,6 +667,78 @@
       const params = new URLSearchParams({ date, shift, slot, name });
       fetch(GS_URL + '?' + params.toString() + '&t=' + Date.now(), { mode: 'no-cors' })
         .catch(err => console.warn('Sheets sync failed:', err));
+    }
+
+    function renderLegend() {
+      const legObj = document.getElementById('staffLegend');
+      if (!legObj) return;
+      legObj.innerHTML = '';
+      Object.keys(staffMap).forEach(k => {
+        const st = staffMap[k];
+        const a = document.createElement('a');
+        a.href = `view.html?n=${encodeURIComponent(st.name)}`; // link by name
+        a.className = 'leg-chip';
+        a.title = `ดูเวร ${st.name}`;
+        a.innerHTML = `<div class="leg-dot" style="background:${st.color}"></div>${st.name}`;
+        legObj.appendChild(a);
+      });
+      // เพิ่มปุ่ม + ที่หน้า Legend
+      const addBtn = document.createElement('button');
+      addBtn.className = 'leg-chip';
+      addBtn.style.border = '1px dashed var(--border)';
+      addBtn.style.background = 'rgba(255,255,255,0.01)';
+      addBtn.style.cursor = 'pointer';
+      addBtn.style.color = 'var(--day-lbl)';
+      addBtn.innerHTML = `➕ เพิ่มชื่อ`;
+      addBtn.onclick = () => promptAddStaff();
+      legObj.appendChild(addBtn);
+    }
+
+    function renderStaffButtons() {
+      const grid = document.getElementById('staffGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      Object.keys(staffMap).forEach(k => {
+        const st = staffMap[k];
+        const btn = document.createElement('button');
+        btn.className = 'staff-btn';
+        btn.style.color = st.color;
+        btn.style.borderColor = st.color;
+        btn.innerHTML = `👤 ${st.name}`;
+        btn.onclick = () => assign(st.name);
+        grid.appendChild(btn);
+      });
+      
+      const addBtn = document.createElement('button');
+      addBtn.className = 'staff-btn';
+      addBtn.style.color = 'var(--txt)';
+      addBtn.style.borderColor = 'var(--border)';
+      addBtn.innerHTML = `➕ เพิ่มชื่อใหม่`;
+      addBtn.onclick = () => promptAddStaff();
+      grid.appendChild(addBtn);
+
+      const clearBtn = document.createElement('button');
+      clearBtn.className = 'staff-btn clear';
+      clearBtn.innerHTML = `🗑 ล้างออก`;
+      clearBtn.onclick = () => assign('');
+      grid.appendChild(clearBtn);
+    }
+
+    function promptAddStaff() {
+      const name = prompt("ใส่ชื่อคนที่ต้องการเพิ่ม:");
+      if (!name) return;
+      const letters = '89ABCDEF';
+      let rcolor = '#';
+      for (let i = 0; i < 6; i++) { rcolor += letters[Math.floor(Math.random() * 8)]; }
+      const color = prompt("ใส่สีประจำตัว (เช่น #ff0000, blue) ถ้าไม่ใส่จะสุ่มให้:", "") || rcolor;
+      staffMap[name] = { name, color };
+      localStorage.setItem('staffMap_v1', JSON.stringify(staffMap));
+      renderStaffButtons();
+      renderLegend();
+      
+      const p = { action: 'addStaff', name, color };
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e=>console.warn(e));
+      showToast(`✅ เพิ่ม ${name} สำเร็จ`);
     }
 
     // ─── Build Calendar Grid ─────────────────────────────────────────────
@@ -757,14 +824,22 @@
 
         for (let s = 1; s <= slots; s++) {
           const name = dutyMap[dutyKey(dateStr, key, s)] || '';
-          const staffCls = name ? (STAFF_CLASS[name] || '') : 'empty';
+          
+          let colorStyle = '';
+          if (name) {
+             const stObj = staffMap[name];
+             colorStyle = stObj ? `color:${stObj.color};` : 'color:var(--txt);';
+          } else {
+             colorStyle = 'color:var(--c-empty);';
+          }
+
           const slot = document.createElement('div');
           slot.className = 'shift-slot';
           slot.setAttribute('role', 'button');
           slot.setAttribute('tabindex', otherMonth ? '-1' : '0');
           slot.innerHTML = `
             <span class="slot-num">${slots > 1 ? s : ''}</span>
-            <span class="shift-name name-${staffCls}">${name || '–'}</span>
+            <span class="shift-name" style="${colorStyle}">${name || '–'}</span>
           `;
           if (!otherMonth) {
             const _s = s;
@@ -850,6 +925,8 @@
     });
 
     // ─── Init ─────────────────────────────────────────────
+    renderLegend();
+    renderStaffButtons();
     buildGrid(current.getFullYear(), current.getMonth());
   </script>
 </body>

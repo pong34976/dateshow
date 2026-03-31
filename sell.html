@@ -61,12 +61,8 @@
     .step1-sub   { font-size:.88rem; color:var(--day-lbl); margin-bottom:26px; }
     .req-grid    { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .req-btn { padding:20px 12px; border-radius:14px; border:2px solid transparent; font-family:'Sarabun',sans-serif; font-size:1.1rem; font-weight:700; cursor:pointer; background:rgba(255,255,255,.06); transition:transform .18s,box-shadow .18s; display:flex; flex-direction:column; align-items:center; gap:4px; }
-    .req-btn:hover { transform:scale(1.07); box-shadow:0 6px 22px rgba(0,0,0,.4); }
+    .req-btn:hover { transform:scale(1.07); box-shadow:0 6px 22px rgba(0,0,0,.4); background:rgba(255,255,255,.1); }
     .req-btn .req-icon { font-size:2rem; }
-    .req-btn.joe { color:var(--c-joe); border-color:var(--c-joe); }
-    .req-btn.wan { color:var(--c-wan); border-color:var(--c-wan); }
-    .req-btn.flook { color:var(--c-flook); border-color:var(--c-flook); }
-    .req-btn.ae  { color:var(--c-ae);  border-color:var(--c-ae); }
 
     /* Step 2: Calendar */
     #step2 { width:100%; max-width:1100px; animation:fadein .35s ease; display:none; }
@@ -124,11 +120,7 @@
     .pick-sub   { font-size:.82rem; color:var(--day-lbl); margin-bottom:18px; text-align:center; line-height:1.6; }
     .pick-grid  { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
     .pick-btn { padding:16px 10px; border-radius:12px; border:2px solid transparent; font-family:'Sarabun',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; background:rgba(255,255,255,.06); transition:transform .15s,box-shadow .15s; display:flex; flex-direction:column; align-items:center; gap:4px; }
-    .pick-btn:hover { transform:scale(1.06); box-shadow:0 4px 18px rgba(0,0,0,.4); }
-    .pick-btn.joe   { color:var(--c-joe);   border-color:var(--c-joe); }
-    .pick-btn.wan   { color:var(--c-wan);   border-color:var(--c-wan); }
-    .pick-btn.flook { color:var(--c-flook); border-color:var(--c-flook); }
-    .pick-btn.ae    { color:var(--c-ae);    border-color:var(--c-ae); }
+    .pick-btn:hover { transform:scale(1.06); box-shadow:0 4px 18px rgba(0,0,0,.4); background:rgba(255,255,255,.1); }
     .pick-btn.hidden { display:none; }
     .pick-cancel { width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,.06); color:var(--day-lbl); font-family:'Sarabun',sans-serif; font-size:.9rem; cursor:pointer; transition:background .2s; }
     .pick-cancel:hover { background:rgba(255,255,255,.12); }
@@ -172,11 +164,8 @@
   <div id="step1">
     <div class="step1-title">🏷️ ใครต้องการขายเวร?</div>
     <div class="step1-sub">เลือกชื่อของคุณ</div>
-    <div class="req-grid">
-      <button class="req-btn joe"   onclick="selectSeller('โจ้','joe')">  <span class="req-icon">👤</span>โจ้</button>
-      <button class="req-btn wan"   onclick="selectSeller('ว่าน','wan')"> <span class="req-icon">👤</span>ว่าน</button>
-      <button class="req-btn flook" onclick="selectSeller('ฟลุ๊ค','flook')"><span class="req-icon">👤</span>ฟลุ๊ค</button>
-      <button class="req-btn ae"    onclick="selectSeller('เอ้','ae')">   <span class="req-icon">👤</span>เอ้</button>
+    <div class="req-grid" id="sellGrid">
+      <!-- สร้างจาก JS -->
     </div>
   </div>
 
@@ -211,11 +200,8 @@
       <div class="pick-icon">🔁</div>
       <div class="pick-title">เลือกคนรับเวรแทน</div>
       <div class="pick-sub" id="pickSub"></div>
-      <div class="pick-grid">
-        <button class="pick-btn joe"   id="pbJoe"   onclick="confirmTransfer('โจ้')">  <span style="font-size:1.5rem;">👤</span>โจ้</button>
-        <button class="pick-btn wan"   id="pbWan"   onclick="confirmTransfer('ว่าน')"> <span style="font-size:1.5rem;">👤</span>ว่าน</button>
-        <button class="pick-btn flook" id="pbFlook" onclick="confirmTransfer('ฟลุ๊ค')"><span style="font-size:1.5rem;">👤</span>ฟลุ๊ค</button>
-        <button class="pick-btn ae"    id="pbAe"    onclick="confirmTransfer('เอ้')">  <span style="font-size:1.5rem;">👤</span>เอ้</button>
+      <div class="pick-grid" id="pickGrid">
+        <!-- สร้างจาก JS -->
       </div>
       <button class="pick-cancel" onclick="closePick()">ยกเลิก</button>
     </div>
@@ -260,6 +246,48 @@
       t.style.background = err ? '#e53935' : '#e65100';
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    const DEFAULT_STAFF = {
+      'โจ้': { name: 'โจ้', color: '#a78bfa' },
+      'ว่าน': { name: 'ว่าน', color: '#34d399' },
+      'ฟลุ๊ค': { name: 'ฟลุ๊ค', color: '#60a5fa' },
+      'เอ้': { name: 'เอ้', color: '#fbbf24' }
+    };
+    let staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
+
+    function renderStaffButtons() {
+      const sellGrid = document.getElementById('sellGrid');
+      if (sellGrid) {
+        sellGrid.innerHTML = '';
+        Object.keys(staffMap).forEach(k => {
+          const st = staffMap[k];
+          const btn = document.createElement('button');
+          btn.className = 'req-btn';
+          btn.style.color = st.color;
+          btn.style.borderColor = st.color;
+          btn.innerHTML = `<span class="req-icon">👤</span>${st.name}`;
+          btn.onclick = () => selectSeller(st.name);
+          sellGrid.appendChild(btn);
+        });
+      }
+
+      const pickGrid = document.getElementById('pickGrid');
+      if (pickGrid) {
+        pickGrid.innerHTML = '';
+        Object.keys(staffMap).forEach(k => {
+          const st = staffMap[k];
+          const btn = document.createElement('button');
+          btn.className = 'pick-btn';
+          // using encodeURI safely
+          btn.id = 'pb_' + encodeURIComponent(st.name);
+          btn.style.color = st.color;
+          btn.style.borderColor = st.color;
+          btn.innerHTML = `<span style="font-size:1.5rem;">👤</span>${st.name}`;
+          btn.onclick = () => confirmTransfer(st.name);
+          pickGrid.appendChild(btn);
+        });
+      }
     }
 
     /* ── Step 1 ── */
@@ -381,12 +409,12 @@
         `${shiftDef ? shiftDef.icon : ''} <strong>เวร${shift}${slotTxt}</strong> · ${thaiDate}`;
 
       // ซ่อนปุ่มของ seller
-      ['pbJoe','pbWan','pbFlook','pbAe'].forEach(id => {
-        document.getElementById(id).classList.remove('hidden');
-      });
-      const nameMap = { pbJoe:'โจ้', pbWan:'ว่าน', pbFlook:'ฟลุ๊ค', pbAe:'เอ้' };
-      Object.entries(nameMap).forEach(([id, n]) => {
-        if (n === seller) document.getElementById(id).classList.add('hidden');
+      Object.keys(staffMap).forEach(k => {
+        const btn = document.getElementById('pb_' + encodeURIComponent(k));
+        if (btn) {
+          if (k === seller) btn.classList.add('hidden');
+          else btn.classList.remove('hidden');
+        }
       });
 
       // update step indicator
@@ -455,6 +483,9 @@
     document.getElementById('btnPrev').addEventListener('click', () => { current.setMonth(current.getMonth()-1); buildGrid(current.getFullYear(),current.getMonth()); });
     document.getElementById('btnNext').addEventListener('click', () => { current.setMonth(current.getMonth()+1); buildGrid(current.getFullYear(),current.getMonth()); });
     document.getElementById('btnToday').addEventListener('click', () => { current = new Date(TODAY.getFullYear(),TODAY.getMonth(),1); buildGrid(current.getFullYear(),current.getMonth()); });
+
+    /* ── Init ── */
+    renderStaffButtons();
 
     /* ── Theme ── */
     const THEME_MAP = { cosmic:'', paper:'t-paper', candy:'t-candy', coffee:'t-coffee', dark:'t-dark' };

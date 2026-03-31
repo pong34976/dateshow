@@ -651,21 +651,7 @@
       box-shadow: 0 0 0 2px currentColor;
     }
 
-    .people-btn.p-ae {
-      color: #fbbf24;
-    }
-
-    .people-btn.p-flook {
-      color: #60a5fa;
-    }
-
-    .people-btn.p-joe {
-      color: #a78bfa;
-    }
-
-    .people-btn.p-wan {
-      color: #34d399;
-    }
+    /* Removed original people-btn specific color classes */
 
     /* People avatars inside chip */
     .wc-people {
@@ -755,11 +741,8 @@
       <!-- People picker -->
       <div class="people-section">
         <span class="people-label">👥 ผู้ร่วมงาน (เลือกได้หลายคน)</span>
-        <div class="people-grid">
-          <button class="people-btn p-ae" id="pb-ae" onclick="togglePerson('เอ้')">👤 เอ้</button>
-          <button class="people-btn p-flook" id="pb-flook" onclick="togglePerson('ฟลุ๊ค')">👤 ฟลุ๊ค</button>
-          <button class="people-btn p-joe" id="pb-joe" onclick="togglePerson('โจ้')">👤 โจ้</button>
-          <button class="people-btn p-wan" id="pb-wan" onclick="togglePerson('ว่าน')">👤 ว่าน</button>
+        <div class="people-grid" id="peopleGrid">
+          <!-- สร้างจาก JS -->
         </div>
       </div>
 
@@ -806,12 +789,58 @@
     let selectedPeople = new Set(); // selected people for current modal
     let editingIndex = -1;
 
-    const PEOPLE = [
-      { key: 'เอ้', id: 'pb-ae' },
-      { key: 'ฟลุ๊ค', id: 'pb-flook' },
-      { key: 'โจ้', id: 'pb-joe' },
-      { key: 'ว่าน', id: 'pb-wan' },
-    ];
+    const DEFAULT_STAFF = {
+      'โจ้': { name: 'โจ้', color: '#a78bfa' },
+      'ว่าน': { name: 'ว่าน', color: '#34d399' },
+      'ฟลุ๊ค': { name: 'ฟลุ๊ค', color: '#60a5fa' },
+      'เอ้': { name: 'เอ้', color: '#fbbf24' }
+    };
+    let staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
+    let PEOPLE = Object.keys(staffMap).map(k => ({ key: k, id: 'pb-' + encodeURIComponent(k) }));
+
+    function initPeopleGrid() {
+      const grid = document.getElementById('peopleGrid');
+      if (grid) {
+        grid.innerHTML = '';
+        PEOPLE.forEach(({key, id}) => {
+          const st = staffMap[key];
+          const btn = document.createElement('button');
+          btn.className = 'people-btn';
+          btn.id = id;
+          btn.style.color = st.color;
+          btn.onclick = () => togglePerson(key);
+          btn.innerHTML = `👤 ${st.name}`;
+          grid.appendChild(btn);
+        });
+        // เพิ่มปุ่ม + ที่หน้ากล่องเลือกคน
+        const addBtn = document.createElement('button');
+        addBtn.className = 'people-btn';
+        addBtn.style.border = '2px dashed var(--border)';
+        addBtn.style.color = 'var(--day-lbl)';
+        addBtn.innerHTML = `➕ เพิ่มรายชื่อ`;
+        addBtn.onclick = () => promptAddStaff();
+        grid.appendChild(addBtn);
+      }
+    }
+
+    function promptAddStaff() {
+      const name = prompt("ใส่ชื่อคนที่ต้องการเพิ่ม:");
+      if (!name) return;
+      const letters = '89ABCDEF';
+      let rcolor = '#';
+      for (let i = 0; i < 6; i++) { rcolor += letters[Math.floor(Math.random() * 8)]; }
+      const color = prompt("ใส่สีประจำตัว (เช่น #ff0000, blue) ถ้าไม่ใส่จะสุ่มให้:", "") || rcolor;
+      staffMap[name] = { name, color };
+      localStorage.setItem('staffMap_v1', JSON.stringify(staffMap));
+      
+      // Update variables
+      PEOPLE = Object.keys(staffMap).map(k => ({ key: k, id: 'pb-' + encodeURIComponent(k) }));
+      initPeopleGrid();
+      
+      const p = { action: 'addStaff', name, color };
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e=>console.warn(e));
+      showToast(`✅ เพิ่ม ${name} สำเร็จ`);
+    }
 
     function togglePerson(name) {
       if (selectedPeople.has(name)) {
@@ -1186,6 +1215,7 @@
     // ─── Init ─────────────────────────────────────────────
     buildTicks();
     setupTimeline();
+    initPeopleGrid();
     updateFill();
     buildGrid(current.getFullYear(), current.getMonth());
   </script>

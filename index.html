@@ -597,24 +597,15 @@
       📋 ระบบเวร
       <span class="badge">แดชบอร์ดรวม</span>
     </div>
-    <div class="legend">
-      <a href="view.html?u=joe" class="leg-chip" title="ดูเวร โจ้">
-        <div class="leg-dot" style="background:var(--c-joe)"></div>โจ้
-      </a>
-      <a href="view.html?u=wan" class="leg-chip" title="ดูเวร ว่าน">
-        <div class="leg-dot" style="background:var(--c-wan)"></div>ว่าน
-      </a>
-      <a href="view.html?u=flook" class="leg-chip" title="ดูเวร ฟลุ๊ค">
-        <div class="leg-dot" style="background:var(--c-flook)"></div>ฟลุ๊ค
-      </a>
-      <a href="view.html?u=ae" class="leg-chip" title="ดูเวร เอ้">
-        <div class="leg-dot" style="background:var(--c-ae)"></div>เอ้
-      </a>
+    <div class="legend" id="staffLegend">
+      <!-- ตำนานจะกูสร้างจาก JS อัตโนมัติ -->
     </div>
     <div class="theme-bar">
-      <a href="edit.html" class="btn-action">✏️ จัดการเวร</a>
-      <a href="move.html" class="btn-action" style="background:#00897b;">🔄 แลกเวร</a>
       <a href="qhd.html" class="btn-action" style="background:#1565c0;">📅 ตารางงาน</a>
+      <a href="edit.html" class="btn-action">✏️ ตั้งเวร</a>
+
+      <a href="move.html" class="btn-action" style="background:#00897b;">🔄 แลกเวร</a>
+
       <button onclick="syncFromCloud()" class="btn-action" style="background:#e53935; border:none; cursor:pointer;">
         🔄 Refresh
       </button>
@@ -797,6 +788,56 @@
     let swapMap = JSON.parse(localStorage.getItem(SWAP_KEY) || '{}')
     let sellMap = JSON.parse(localStorage.getItem('sellMap_v1') || '{}');
     let sellTransferMap = JSON.parse(localStorage.getItem('sellTransferMap_v1') || '{}');
+
+    const DEFAULT_STAFF = {
+      'โจ้': { name: 'โจ้', color: '#a78bfa' },
+      'ว่าน': { name: 'ว่าน', color: '#34d399' },
+      'ฟลุ๊ค': { name: 'ฟลุ๊ค', color: '#60a5fa' },
+      'เอ้': { name: 'เอ้', color: '#fbbf24' }
+    };
+    let staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
+
+    function renderLegend() {
+      const legObj = document.getElementById('staffLegend');
+      if (!legObj) return;
+      legObj.innerHTML = '';
+      Object.keys(staffMap).forEach(k => {
+        const st = staffMap[k];
+        const a = document.createElement('a');
+        a.href = `view.html?n=${encodeURIComponent(st.name)}`; // link by name
+        a.className = 'leg-chip';
+        a.title = `ดูเวร ${st.name}`;
+        a.innerHTML = `<div class="leg-dot" style="background:${st.color}"></div>${st.name}`;
+        legObj.appendChild(a);
+      });
+      // เพิ่มปุ่ม + ที่หน้า Legend
+      const addBtn = document.createElement('button');
+      addBtn.className = 'leg-chip';
+      addBtn.style.border = '1px dashed var(--border)';
+      addBtn.style.background = 'rgba(255,255,255,0.05)';
+      addBtn.style.cursor = 'pointer';
+      addBtn.style.color = 'var(--day-lbl)';
+      addBtn.innerHTML = `➕ เพิ่มรายชื่อ`;
+      addBtn.onclick = () => promptAddStaff();
+      legObj.appendChild(addBtn);
+    }
+
+    function promptAddStaff() {
+      const name = prompt("ใส่ชื่อคนที่ต้องการเพิ่ม:");
+      if (!name) return;
+      const letters = '89ABCDEF';
+      let rcolor = '#';
+      for (let i = 0; i < 6; i++) { rcolor += letters[Math.floor(Math.random() * 8)]; }
+      const color = prompt("ใส่สีประจำตัว (เช่น #ff0000, blue) ถ้าไม่ใส่จะสุ่มให้:", "") || rcolor;
+      staffMap[name] = { name, color };
+      localStorage.setItem('staffMap_v1', JSON.stringify(staffMap));
+      renderLegend();
+      
+      const p = { action: 'addStaff', name, color };
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e=>console.warn(e));
+      alert(`✅ เพิ่ม ${name} สำเร็จ (ข้อมูลจะถูก Sync ไปยังแผ่นงาน)`);
+      location.reload(); 
+    }
 
     function fmtDate(d) {
       const y = d.getFullYear();
@@ -983,6 +1024,7 @@
     });
 
     // ─── Init ─────────────────────────────────────────────
+    renderLegend();
     buildGrid(current.getFullYear(), current.getMonth());
     renderActivityLog();
     fetchHolidays(); // async: re-renders grid when holidays loaded
@@ -1037,6 +1079,23 @@
           }
           localStorage.setItem(SWAP_KEY, JSON.stringify(sMap));
           swapMap = sMap; // Update global
+
+          // 2.5 Process Staffs
+          const stfMap = {};
+          if (json.data.staffs && json.data.staffs.length > 1) {
+            json.data.staffs.slice(1).forEach(r => {
+              if (r.length >= 2 && r[1]) {
+                const name = r[1];
+                const color = r[2] || '#cccccc';
+                stfMap[name] = { name, color };
+              }
+            });
+            if (Object.keys(stfMap).length > 0) {
+              localStorage.setItem('staffMap_v1', JSON.stringify(stfMap));
+              staffMap = stfMap;
+              renderLegend();
+            }
+          }
 
           // 3. Process Holidays (ถ้า server ส่งมา)
           if (json.data.holidays && typeof json.data.holidays === 'object') {

@@ -304,30 +304,11 @@
     .req-btn:hover {
       transform: scale(1.07);
       box-shadow: 0 6px 22px rgba(0, 0, 0, .4);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .req-btn .req-icon {
       font-size: 2rem;
-    }
-
-    .req-btn.joe {
-      color: var(--c-joe);
-      border-color: var(--c-joe);
-    }
-
-    .req-btn.wan {
-      color: var(--c-wan);
-      border-color: var(--c-wan);
-    }
-
-    .req-btn.flook {
-      color: var(--c-flook);
-      border-color: var(--c-flook);
-    }
-
-    .req-btn.ae {
-      color: var(--c-ae);
-      border-color: var(--c-ae);
     }
 
     /* ── Calendar (Step 2) ── */
@@ -967,19 +948,8 @@
   <div id="step1">
     <div class="step1-title">🔄 ใครต้องการแลกเวร?</div>
     <div class="step1-sub">เลือกชื่อผู้ขอแลกเวร</div>
-    <div class="req-grid">
-      <button class="req-btn joe" onclick="selectRequester('โจ้','joe')">
-        <span class="req-icon">👤</span>โจ้
-      </button>
-      <button class="req-btn wan" onclick="selectRequester('ว่าน','wan')">
-        <span class="req-icon">👤</span>ว่าน
-      </button>
-      <button class="req-btn flook" onclick="selectRequester('ฟลุ๊ค','flook')">
-        <span class="req-icon">👤</span>ฟลุ๊ค
-      </button>
-      <button class="req-btn ae" onclick="selectRequester('เอ้','ae')">
-        <span class="req-icon">👤</span>เอ้
-      </button>
+    <div class="req-grid" id="reqGrid">
+      <!-- สร้างจาก JS -->
     </div>
   </div>
 
@@ -1077,6 +1047,14 @@
     let dutyMap = JSON.parse(localStorage.getItem(DUTY_KEY) || '{}');
     let swapMap = JSON.parse(localStorage.getItem(SWAP_KEY) || '{}');
 
+    const DEFAULT_STAFF = {
+      'โจ้': { name: 'โจ้', color: '#a78bfa' },
+      'ว่าน': { name: 'ว่าน', color: '#34d399' },
+      'ฟลุ๊ค': { name: 'ฟลุ๊ค', color: '#60a5fa' },
+      'เอ้': { name: 'เอ้', color: '#fbbf24' }
+    };
+    let staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
+
     let requester = '';     // ชื่อผู้ขอแลก (ไทย)
     let pendingSwap = null; // ข้อมูลที่รอยืนยัน
 
@@ -1097,8 +1075,24 @@
       setTimeout(() => t.classList.remove('show'), 2800);
     }
 
+    function renderStaffButtons() {
+      const grid = document.getElementById('reqGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      Object.keys(staffMap).forEach(k => {
+        const st = staffMap[k];
+        const btn = document.createElement('button');
+        btn.className = 'req-btn';
+        btn.style.color = st.color;
+        btn.style.borderColor = st.color;
+        btn.innerHTML = `<span class="req-icon">👤</span>${st.name}`;
+        btn.onclick = () => selectRequester(st.name);
+        grid.appendChild(btn);
+      });
+    }
+
     /* ─── Step 1: pick requester ─── */
-    function selectRequester(name, cls) {
+    function selectRequester(name) {
       requester = name;
       document.getElementById('sdot1').classList.remove('active');
       document.getElementById('sdot1').classList.add('done');
@@ -1438,6 +1432,7 @@
     });
 
     /* ─── Init: show swap log if any ─── */
+    renderStaffButtons();
     renderLog();
   </script>
 

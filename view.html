@@ -432,10 +432,7 @@
     .sg-night .shift-group-header { background: var(--n-bg, rgba(100, 140, 255, .12)); color: var(--txt); }
     .sg-night .shift-slot { background: var(--n-slot, rgba(100, 140, 255, .07)); border-color: var(--n-border, rgba(100, 140, 255, .14)); color: var(--txt); }
 
-    .name-joe { color: var(--c-joe); }
-    .name-wan { color: var(--c-wan); }
-    .name-flook { color: var(--c-flook); }
-    .name-ae { color: var(--c-ae); }
+    /* old name classes removed */
     .name-empty { color: var(--c-empty); }
 
     .cal-cell.is-sun, .cal-cell.is-holiday { background: rgba(255, 107, 107, 0.05); }
@@ -494,24 +491,28 @@
   <script>
     const STORAGE_KEY = 'dutyMap_v1';
     
-    const params = new URLSearchParams(window.location.search);
-    const rawUser = params.get('u') || '';
-
-    const aliasMap = {
-      'joe': 'โจ้',
-      'wan': 'ว่าน',
-      'flook': 'ฟลุ๊ค',
-      'ae': 'เอ้'
+    const DEFAULT_STAFF = {
+      'โจ้': { name: 'โจ้', color: '#a78bfa' },
+      'ว่าน': { name: 'ว่าน', color: '#34d399' },
+      'ฟลุ๊ค': { name: 'ฟลุ๊ค', color: '#60a5fa' },
+      'เอ้': { name: 'เอ้', color: '#fbbf24' }
     };
+    let staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
 
-    const targetName = aliasMap[rawUser.toLowerCase()] || rawUser || '';
+    const params = new URLSearchParams(window.location.search);
+    let targetName = params.get('n') || '';
+    if (!targetName) {
+      const rawUser = params.get('u') || '';
+      const aliasMap = { 'joe': 'โจ้', 'wan': 'ว่าน', 'flook': 'ฟลุ๊ค', 'ae': 'เอ้' };
+      targetName = aliasMap[rawUser.toLowerCase()] || rawUser || '';
+    }
 
     if (targetName) {
       document.getElementById('pageTitle').textContent = `เวรของ ${targetName}`;
       document.getElementById('nameBadge').textContent = 'เวรส่วนตัว';
-      const colorMap = { 'โจ้': 'var(--c-joe)', 'ว่าน': 'var(--c-wan)', 'ฟลุ๊ค': 'var(--c-flook)', 'เอ้': 'var(--c-ae)' };
-      if (colorMap[targetName]) {
-        document.getElementById('nameBadge').style.background = colorMap[targetName];
+      const stObj = staffMap[targetName];
+      if (stObj) {
+        document.getElementById('nameBadge').style.background = stObj.color;
         document.getElementById('nameBadge').style.color = '#fff';
       }
     } else {
@@ -525,7 +526,6 @@
       { key: 'บ่าย', cls: 'afternoon', icon: '☀️', slots: 2 },
       { key: 'ดึก', cls: 'night', icon: '🌙', slots: 1 },
     ];
-    const STAFF_CLASS = { 'โจ้': 'joe', 'ว่าน': 'wan', 'ฟลุ๊ค': 'flook', 'เอ้': 'ae' };
 
     const TODAY = new Date();
     let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);

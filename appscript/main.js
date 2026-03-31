@@ -11,11 +11,17 @@ function doGet(e) {
 
     // ─── กรณี 0: Sync ข้อมูลทั้งหมดกลับไปที่แอป (ดึงข้อมูล) ───
     if (p.action === 'sync') {
-        var result = { duties: [], swaps: [], works: [], holidays: {}, sells: [], sellTransfers: [] };
+        var result = { duties: [], swaps: [], works: [], holidays: {}, sells: [], sellTransfers: [], staffs: [] };
 
         var dutySheet = ss.getSheets()[0];
         if (dutySheet && dutySheet.getLastRow() > 0) {
             result.duties = dutySheet.getDataRange().getDisplayValues();
+        }
+
+        // ─── ดึงพนักงานจาก sheet "staff" ───
+        var staffSheet = ss.getSheetByName('staff');
+        if (staffSheet && staffSheet.getLastRow() > 0) {
+            result.staffs = staffSheet.getDataRange().getDisplayValues();
         }
 
         var swapSheet = ss.getSheetByName('swap');
@@ -282,6 +288,18 @@ function doGet(e) {
         ]);
         return ContentService
             .createTextOutput(JSON.stringify({ status: 'ok' }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ─── กรณีเพิ่มพนักงาน (addStaff) ───
+    if (p.action === 'addStaff') {
+        var staffSheet = ss.getSheetByName('staff') || ss.insertSheet('staff');
+        if (staffSheet.getLastRow() === 0) {
+            staffSheet.appendRow(['timestamp', 'ชื่อ', 'สี']);
+        }
+        staffSheet.appendRow([new Date(), p.name || '', p.color || '']);
+        return ContentService
+            .createTextOutput(JSON.stringify({ status: 'ok', action: 'addStaff' }))
             .setMimeType(ContentService.MimeType.JSON);
     }
 
