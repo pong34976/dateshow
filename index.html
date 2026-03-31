@@ -605,11 +605,11 @@
       <a href="edit.html" class="btn-action">✏️ ตั้งเวร</a>
 
       <a href="move.html" class="btn-action" style="background:#00897b;">🔄 แลกเวร</a>
-
+      <a href="sell.html" class="btn-action" style="background:#e65100;">🏷️ ขายเวร</a>
       <button onclick="syncFromCloud()" class="btn-action" style="background:#e53935; border:none; cursor:pointer;">
         🔄 Refresh
       </button>
-      <a href="sell.html" class="btn-action" style="background:#e65100;">🏷️ ขายเวร</a>
+
       <span class="theme-label" style="margin-left: 8px;">🎨</span>
       <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic">
       </div>
@@ -832,11 +832,11 @@
       staffMap[name] = { name, color };
       localStorage.setItem('staffMap_v1', JSON.stringify(staffMap));
       renderLegend();
-      
+
       const p = { action: 'addStaff', name, color };
-      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e=>console.warn(e));
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
       alert(`✅ เพิ่ม ${name} สำเร็จ (ข้อมูลจะถูก Sync ไปยังแผ่นงาน)`);
-      location.reload(); 
+      location.reload();
     }
 
     function fmtDate(d) {
