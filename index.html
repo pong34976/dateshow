@@ -506,6 +506,28 @@
     .t-paper .cal-cell.is-sat {
       background: rgba(25, 118, 210, 0.06);
     }
+
+    /* Holiday label */
+    .holiday-label {
+      font-size: .65rem;
+      font-weight: 700;
+      color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.13);
+      border-radius: 5px;
+      padding: 2px 5px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: block;
+    }
+
+    .t-paper .holiday-label {
+      color: #c62828;
+      background: rgba(198, 40, 40, 0.08);
+    }
+
     /* Swap log table */
     .swap-log {
       width: 100%;
@@ -518,6 +540,7 @@
       border: 1px solid var(--border);
       display: none;
     }
+
     .log-hdr {
       background: var(--hdr);
       padding: 14px 22px;
@@ -526,27 +549,34 @@
       color: var(--hdr-txt);
       border-bottom: 1px solid var(--border);
     }
+
     .log-table {
       width: 100%;
       border-collapse: collapse;
       font-size: .83rem;
     }
+
     .log-table th {
       padding: 9px 14px;
       text-align: left;
       color: var(--day-lbl);
       font-weight: 600;
       font-size: .75rem;
-      background: rgba(255,255,255,.03);
+      background: rgba(255, 255, 255, .03);
       border-bottom: 1px solid var(--border);
     }
+
     .log-table td {
       padding: 9px 14px;
       border-bottom: 1px solid var(--border);
       color: var(--txt);
       vertical-align: middle;
     }
-    .log-table tr:last-child td { border-bottom: none; }
+
+    .log-table tr:last-child td {
+      border-bottom: none;
+    }
+
     .tag-swap {
       background: #00897b;
       color: #fff;
@@ -588,6 +618,7 @@
       <button onclick="syncFromCloud()" class="btn-action" style="background:#e53935; border:none; cursor:pointer;">
         🔄 Refresh
       </button>
+      <a href="sell.html" class="btn-action" style="background:#e65100;">🏷️ ขายเวร</a>
       <span class="theme-label" style="margin-left: 8px;">🎨</span>
       <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic">
       </div>
@@ -623,19 +654,21 @@
     <div class="cal-grid" id="calGrid"></div>
   </div>
 
-  <!-- Swap log (ด้านล่างปฏิทิน) -->
-  <div class="swap-log" id="swapLog2">
-    <div class="log-hdr">🔄 ประวัติการแลกเวร</div>
+  <!-- Unified Activity Log (แลก + ขาย + ประกาศขาย) -->
+  <div class="swap-log" id="activityLog" style="display:none;">
+    <div class="log-hdr">🗓️ ประวัติการแลก / ขายเวร <span id="activityCount"
+        style="font-weight:400;font-size:.8rem;opacity:.65;"></span></div>
     <table class="log-table">
       <thead>
         <tr>
-          <th>ผู้ขอแลก</th>
-          <th>วันที่ได้รับ</th>
-          <th>แลกกับ</th>
-          <th>วันที่ให้คืน</th>
+          <th>วันที่</th>
+          <th>กะ</th>
+          <th>ประเภท</th>
+          <th>รายละเอียด</th>
+          <th></th>
         </tr>
       </thead>
-      <tbody id="logBody2"></tbody>
+      <tbody id="activityBody"></tbody>
     </table>
   </div>
 
@@ -643,6 +676,111 @@
     const GS_URL = 'https://script.google.com/macros/s/AKfycbxwkcBPudJEr_FfHrLvaEOrPjzdu3wC9G3HUHOue_cc--zLoPGVcQNDMS8Tgrv1Q3lx/exec';
     const STORAGE_KEY = 'dutyMap_v1';
     const SWAP_KEY = 'swapMap_v1';
+    const HOLIDAY_KEY = 'holidayMap_v1';
+    const HOLIDAY_TTL = 6 * 60 * 60 * 1000; // 6 hours
+
+    // ─── Holiday Map (date string → holiday name) ─────────
+    let holidayMap = {};
+    function loadHolidayCache() {
+      try {
+        const raw = localStorage.getItem(HOLIDAY_KEY);
+        if (!raw) return false;
+        const { ts, data } = JSON.parse(raw);
+        if (Date.now() - ts > HOLIDAY_TTL) return false;
+        holidayMap = data;
+        return true;
+      } catch { return false; }
+    }
+    function saveHolidayCache() {
+      try {
+        localStorage.setItem(HOLIDAY_KEY, JSON.stringify({ ts: Date.now(), data: holidayMap }));
+      } catch { }
+    }
+
+    // Parse iCal text → map of date string → holiday name (only วันหยุดนักขัตฤกษ์)
+    // (ใช้กรณี fallback เท่านั้น)
+    function parseIcal(text) {
+      const map = {};
+      const events = text.split('BEGIN:VEVENT');
+      for (let i = 1; i < events.length; i++) {
+        const ev = events[i];
+        // Unfold continuation lines (lines starting with space/tab)
+        const unfolded = ev.replace(/\r?\n[ \t]/g, '');
+        const dtmatch = unfolded.match(/DTSTART(?:;[^:]*)?:([\d]{8})/);
+        const summatch = unfolded.match(/SUMMARY:(.+?)(?:\r?\n|$)/);
+        const descmatch = unfolded.match(/DESCRIPTION:(.+?)(?:\r?\n|$)/);
+        if (!dtmatch || !summatch) continue;
+        const desc = descmatch ? descmatch[1] : '';
+        // Only include public holidays (วันหยุดนักขัตฤกษ์)
+        if (!desc.includes('วันหยุดนักขัตฤกษ์')) continue;
+        const raw = dtmatch[1]; // e.g. '20260406'
+        const dateStr = `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+        const name = summatch[1].trim();
+        if (!map[dateStr]) map[dateStr] = name;
+      }
+      return map;
+    }
+
+    // ─── Hardcoded Thai public holidays fallback (วันหยุดนักขัตฤกษ์) ───
+    const HOLIDAY_FALLBACK = {
+      // 2025 (2568)
+      '2025-01-01': 'วันขึ้นปีใหม่',
+      '2025-02-12': 'วันมาฆบูชา',
+      '2025-04-06': 'วันจักรี',
+      '2025-04-13': 'วันสงกรานต์',
+      '2025-04-14': 'วันสงกรานต์',
+      '2025-04-15': 'วันสงกรานต์',
+      '2025-05-01': 'วันแรงงานแห่งชาติ',
+      '2025-05-04': 'วันฉัตรมงคล',
+      '2025-05-12': 'วันหยุดชดเชยวันวิสาขบูชา',
+      '2025-06-03': 'วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ',
+      '2025-07-28': 'วันเฉลิมพระชนมพรรษา รัชกาลที่ 10',
+      '2025-07-29': 'วันอาสาฬหบูชา',
+      '2025-07-30': 'วันเข้าพรรษา',
+      '2025-08-12': 'วันเฉลิมพระชนมพรรษา สมเด็จพระบรมราชชนนีพันปีหลวง',
+      '2025-10-13': 'วันนวมินทรมหาราช',
+      '2025-10-23': 'วันปิยมหาราช',
+      '2025-12-05': 'วันพ่อแห่งชาติ',
+      '2025-12-10': 'วันรัฐธรรมนูญ',
+      '2025-12-31': 'วันสิ้นปี',
+      // 2026 (2569)
+      '2026-01-01': 'วันขึ้นปีใหม่',
+      '2026-01-02': 'วันหยุดราชการเพิ่มเป็นกรณีพิเศษ',
+      '2026-03-03': 'วันมาฆบูชา',
+      '2026-04-06': 'วันจักรี',
+      '2026-04-13': 'วันสงกรานต์',
+      '2026-04-14': 'วันสงกรานต์',
+      '2026-04-15': 'วันสงกรานต์',
+      '2026-05-01': 'วันแรงงานแห่งชาติ',
+      '2026-05-04': 'วันฉัตรมงคล',
+      '2026-06-01': 'วันหยุดชดเชยวันวิสาขบูชา',
+      '2026-06-03': 'วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ',
+      '2026-07-28': 'วันเฉลิมพระชนมพรรษา รัชกาลที่ 10',
+      '2026-07-29': 'วันอาสาฬหบูชา',
+      '2026-07-30': 'วันเข้าพรรษา',
+      '2026-08-12': 'วันเฉลิมพระชนมพรรษา สมเด็จพระบรมราชชนนีพันปีหลวง',
+      '2026-10-13': 'วันนวมินทรมหาราช',
+      '2026-10-23': 'วันปิยมหาราช',
+      '2026-12-07': 'วันหยุดชดเชยวันพ่อแห่งชาติ',
+      '2026-12-10': 'วันรัฐธรรมนูญ',
+      '2026-12-31': 'วันสิ้นปี',
+    };
+
+    async function fetchHolidays() {
+      // Always load fallback first so calendar shows immediately
+      holidayMap = { ...HOLIDAY_FALLBACK };
+
+      // Try to load cache from previous sync (if fresh)
+      if (loadHolidayCache()) {
+        holidayMap = { ...HOLIDAY_FALLBACK, ...holidayMap };
+        buildGrid(current.getFullYear(), current.getMonth());
+        return;
+      }
+
+      // No fresh cache — show fallback while waiting for sync
+      buildGrid(current.getFullYear(), current.getMonth());
+      // (holidays will update via syncFromCloud)
+    }
 
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -656,7 +794,9 @@
     let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
 
     let dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    let swapMap = JSON.parse(localStorage.getItem(SWAP_KEY) || '{}');
+    let swapMap = JSON.parse(localStorage.getItem(SWAP_KEY) || '{}')
+    let sellMap = JSON.parse(localStorage.getItem('sellMap_v1') || '{}');
+    let sellTransferMap = JSON.parse(localStorage.getItem('sellTransferMap_v1') || '{}');
 
     function fmtDate(d) {
       const y = d.getFullYear();
@@ -705,6 +845,10 @@
       if (dow === 0) cell.classList.add('is-sun');
       if (dow === 6) cell.classList.add('is-sat');
 
+      const dateStr = fmtDate(dateObj);
+      const holidayName = holidayMap[dateStr];
+      if (holidayName && dow !== 0 && dow !== 6) cell.classList.add('is-holiday');
+
       const isToday = !otherMonth &&
         dateObj.getFullYear() === TODAY.getFullYear() &&
         dateObj.getMonth() === TODAY.getMonth() &&
@@ -714,38 +858,38 @@
       const num = document.createElement('div');
       num.className = 'day-num';
       num.textContent = dayNum;
-      if (otherMonth) {
-        num.style.opacity = '0.5';
-      }
       cell.appendChild(num);
 
-      const dateStr = fmtDate(dateObj);
+      if (holidayName && !otherMonth) {
+        const lbl = document.createElement('span');
+        lbl.className = 'holiday-label';
+        lbl.title = holidayName;
+        lbl.textContent = '🎌 ' + holidayName;
+        cell.appendChild(lbl);
+      }
 
       const shiftsDiv = document.createElement('div');
       shiftsDiv.className = 'shifts';
 
-      // 🛑 SHOW ALL ASSIGNED SHIFTS WITH HIGH CONTRAST BLOCK 🛑
       let hasAnyShift = false;
       SHIFTS.forEach(({ key, cls, icon, slots }) => {
         const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-        if (key === 'เช้า' && !isWeekend) return;
+        const isHoliday = !!holidayMap[dateStr];
+        if (key === 'เช้า' && !isWeekend && !isHoliday) return;
 
         let bgColor = '';
         let textColor = '#fff';
         let textShadow = '';
 
-        // Applying requested colors: เช้า = สีเหลือง, บ่าย = สีส้ม, ดึก = สีฟ้าโทนมืด
         if (key === 'เช้า') {
-          bgColor = '#fdd835'; // Yellow
-          textColor = '#3e2723'; // Dark brown/black for contrast
-        }
-        else if (key === 'บ่าย') {
-          bgColor = '#f57c00'; // Orange
+          bgColor = '#fdd835';
+          textColor = '#3e2723';
+        } else if (key === 'บ่าย') {
+          bgColor = '#f57c00';
           textColor = '#fff';
           textShadow = '0 1px 2px rgba(0,0,0,0.5)';
-        }
-        else if (key === 'ดึก') {
-          bgColor = '#0d47a1'; // Dark Blue 
+        } else if (key === 'ดึก') {
+          bgColor = '#0d47a1';
           textColor = '#fff';
           textShadow = '0 1px 2px rgba(0,0,0,0.5)';
         }
@@ -756,14 +900,36 @@
             hasAnyShift = true;
             const dk = dutyKey(dateStr, key, s);
             const swapEntry = swapMap[dk];
+            const sellEntry = sellMap[dk];
+            const transferEntry = sellTransferMap[dk];
             let html;
             if (swapEntry) {
-              // แสดงชื่อเดิม (ขีดฆ่า) + ชื่อใหม่
+              // แลกเวร: ~~original~~ แลก requester
               html = `
                 <div class="view-shift is-swapped" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;" title="${key} - แลกเวร: ${swapEntry.original} → ${swapEntry.requester}">
                   <span class="swap-badge-idx">แลก</span>
                   <span class="swap-old">${icon} ${swapEntry.original}</span>
                   <span class="swap-new">${swapEntry.requester}</span>
+                </div>
+              `;
+            } else if (transferEntry) {
+              // ขายเวร: ~~seller~~ ขาย buyer
+              html = `
+                <div class="view-shift is-swapped" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;" title="${key} - ขาย: ${transferEntry.original} → ${name}">
+                  <span class="swap-badge-idx" style="background:#e65100;">ขาย</span>
+                  <span class="swap-old">${icon} ${transferEntry.original}</span>
+                  <span class="swap-new">${name}</span>
+                </div>
+              `;
+            } else if (sellEntry) {
+              // ประกาศขาย — ยังหาคนแทน
+              html = `
+                <div class="view-shift" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;cursor:pointer;"
+                  title="คลิกเพื่อเลือกคนแทน ${name}"
+                  onclick="openBuyModal('${dk}','${dateStr}','${key}','${s}','${name}')">
+                  <span class="swap-badge-idx" style="background:#e65100;position:relative;top:0;right:0;">ขาย</span>
+                  <span>${icon} ${name}</span>
+                  <span style="font-size:.7rem;opacity:.75;margin-left:2px;">หาคนแทน</span>
                 </div>
               `;
             } else {
@@ -818,13 +984,14 @@
 
     // ─── Init ─────────────────────────────────────────────
     buildGrid(current.getFullYear(), current.getMonth());
-    renderSwapLog();
+    renderActivityLog();
+    fetchHolidays(); // async: re-renders grid when holidays loaded
 
     const AUTO_SYNC_MINUTES = 30;
 
     async function syncFromCloud(isAuto = false) {
-      if(!isAuto && !confirm('ยืนยันดึงข้อมูลล่าสุดจาก Google Sheets? (จะโหลดมาทับข้อมูลในเครื่อง)')) return;
-      
+      if (!isAuto && !confirm('ยืนยันดึงข้อมูลล่าสุดจาก Google Sheets? (จะโหลดมาทับข้อมูลในเครื่อง)')) return;
+
       const btn = document.querySelector('button[onclick="syncFromCloud()"]');
       const oldTxt = btn.innerHTML;
       btn.innerHTML = '⏳ โหลด...';
@@ -834,7 +1001,7 @@
       try {
         const res = await fetch(GS_URL + '?action=sync&t=' + Date.now());
         const json = await res.json();
-        
+
         if (json.status === 'ok') {
           // 1. Process Duties
           const dMap = {};
@@ -842,8 +1009,8 @@
           if (dRows && dRows.length > 1) {
             dRows.slice(1).forEach(r => {
               if (r.length >= 5 && r[1]) {
-                const dk = dutyKey(r[1], r[2]||'', r[3]||'');
-                dMap[dk] = r[4]; 
+                const dk = dutyKey(r[1], r[2] || '', r[3] || '');
+                dMap[dk] = r[4];
               }
             });
           }
@@ -856,7 +1023,7 @@
           if (sRows && sRows.length > 1) {
             sRows.slice(1).forEach(r => {
               if (r.length >= 6 && r[1]) {
-                const dk = dutyKey(r[1], r[2]||'', r[3]||'');
+                const dk = dutyKey(r[1], r[2] || '', r[3] || '');
                 sMap[dk] = {
                   original: r[4] || '',
                   requester: r[5] || '',
@@ -871,8 +1038,42 @@
           localStorage.setItem(SWAP_KEY, JSON.stringify(sMap));
           swapMap = sMap; // Update global
 
+          // 3. Process Holidays (ถ้า server ส่งมา)
+          if (json.data.holidays && typeof json.data.holidays === 'object') {
+            const liveHolidays = json.data.holidays;
+            holidayMap = { ...HOLIDAY_FALLBACK, ...liveHolidays };
+            saveHolidayCache();
+          }
+
+          // 4. Process Sells
+          if (json.data.sells && json.data.sells.length > 1) {
+            const newSell = {};
+            json.data.sells.slice(1).forEach(r => {
+              if (r.length >= 5 && r[1]) {
+                const dk = dutyKey(r[1], r[2] || '', r[3] || '');
+                newSell[dk] = { date: r[1], shift: r[2] || '', slot: r[3] || '', seller: r[4] || '', savedAt: r[0] || '' };
+              }
+            });
+            localStorage.setItem('sellMap_v1', JSON.stringify(newSell));
+            sellMap = newSell;
+          }
+
+          // 5. Process SellTransfers (~~seller~~ ขาย buyer)
+          if (json.data.sellTransfers && json.data.sellTransfers.length > 1) {
+            const newST = {};
+            json.data.sellTransfers.slice(1).forEach(r => {
+              if (r.length >= 6 && r[1]) {
+                const dk = dutyKey(r[1], r[2] || '', r[3] || '');
+                newST[dk] = { original: r[4] || '', buyer: r[5] || '', date: r[1], shift: r[2] || '', slot: r[3] || '', savedAt: r[0] || '' };
+              }
+            });
+            localStorage.setItem('sellTransferMap_v1', JSON.stringify(newST));
+            sellTransferMap = newST;
+          }
+
+
           buildGrid(current.getFullYear(), current.getMonth());
-          renderSwapLog();
+          renderActivityLog();
 
           btn.innerHTML = oldTxt;
           btn.style.opacity = '1';
@@ -892,38 +1093,164 @@
     syncFromCloud(true);
     setInterval(() => syncFromCloud(true), AUTO_SYNC_MINUTES * 60 * 1000);
 
-    function renderSwapLog() {
-      const swapMap = JSON.parse(localStorage.getItem('swapMap_v1') || '{}');
-      const allEntries = Object.entries(swapMap);
-      const logEl = document.getElementById('swapLog2');
-      const body  = document.getElementById('logBody2');
-      if (!allEntries.length) { logEl.style.display = 'none'; return; }
-      logEl.style.display = 'block';
+    function renderSwapLog() { renderActivityLog(); } // legacy alias
 
-      const seen = new Set();
-      const pairs = [];
-      allEntries.forEach(([dk, e]) => {
-        if (seen.has(dk)) return;
-        const partner = allEntries.find(([dk2, e2]) =>
-          !seen.has(dk2) && dk2 !== dk &&
-          e2.original === e.requester && e2.requester === e.original
-        );
-        seen.add(dk);
-        if (partner) seen.add(partner[0]);
-        pairs.push({ a: e, b: partner ? partner[1] : null });
+    /* ─── Buy modal (เลือกคนแทนเวรขาย) ─── */
+    let _buyPending = null;
+
+    function openBuyModal(dk, dateStr, shift, slot, seller) {
+      _buyPending = { dk, dateStr, shift, slot, seller };
+      const shiftDef = SHIFTS.find(s => s.key === shift);
+      const d = new Date(dateStr);
+      const thaiDate = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`;
+      const slotTxt = shiftDef && shiftDef.slots > 1 ? ` ช่อง ${slot}` : '';
+      document.getElementById('buyModalSub').innerHTML =
+        `<strong style="color:#ffb74d;">${seller}</strong> ประกาศขาย<br>` +
+        `${shiftDef ? shiftDef.icon : ''} เวร${shift}${slotTxt} · ${thaiDate}<br>` +
+        `<span style="opacity:.7;font-size:.8rem;">เลือกชื่อคนที่จะมารับแทน</span>`;
+      document.querySelectorAll('#buyModalOverlay .staff-btn').forEach(btn => {
+        const nameTh = btn.textContent.trim().replace('👤 ', '');
+        btn.style.display = nameTh === seller ? 'none' : 'block';
       });
-      pairs.sort((x, y) => (y.a.savedAt || '').localeCompare(x.a.savedAt || ''));
+      document.getElementById('buyModalOverlay').classList.add('open');
+    }
 
-      const fmtD = (ds) => {
-        const d = new Date(ds);
-        return `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${String(d.getFullYear()+543).slice(2)}`;
-      };
-      body.innerHTML = pairs.map(({ a, b }) => `<tr>
-        <td><strong style="color:#4db6ac;">${a.requester}</strong> <span class="tag-swap">แลก</span></td>
-        <td>${fmtD(a.date)} <span style="opacity:.6;font-size:.78rem;">เวร${a.shift}</span></td>
-        <td><strong style="color:#ff8a65;">${a.original}</strong></td>
-        <td>${b ? fmtD(b.date) + ` <span style="opacity:.6;font-size:.78rem;">เวร${b.shift}</span>` : '–'}</td>
-      </tr>`).join('');
+    function closeBuyModal() {
+      document.getElementById('buyModalOverlay').classList.remove('open');
+      _buyPending = null;
+    }
+
+    function confirmBuy(buyerName) {
+      if (!_buyPending) return;
+      closeBuyModal();
+      const { dk, dateStr, shift, slot, seller } = _buyPending;
+      dutyMap[dk] = buyerName;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dutyMap));
+      delete sellMap[dk];
+      localStorage.setItem('sellMap_v1', JSON.stringify(sellMap));
+      const p = { date: dateStr, shift, slot, name: buyerName };
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
+      const ps = { action: 'cancelSell', date: dateStr, shift, slot, name: seller };
+      fetch(GS_URL + '?' + new URLSearchParams(ps).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
+      buildGrid(current.getFullYear(), current.getMonth());
+      renderActivityLog();
+      const d = new Date(dateStr);
+      const thaiDate = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`;
+      showToast(`✅ ${buyerName} รับเวร${shift} ${thaiDate} แทน ${seller}`);
+    }
+
+    document.getElementById('buyModalOverlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeBuyModal();
+    });
+
+    /* ─── renderActivityLog — Unified log (แลก + ขาย + ประกาศขาย) ─── */
+    const SHIFT_ICONS = { 'เช้า': '🌅', 'บ่าย': '☀️', 'ดึก': '🌙' };
+
+    function renderActivityLog() {
+      const logEl = document.getElementById('activityLog');
+      const body = document.getElementById('activityBody');
+      const items = [];
+      const fmtD = ds => { const d = new Date(ds); return `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`; };
+      const cancelBtn = (fn, label = '✕ ยกเลิก') =>
+        `<button onclick="${fn}" style="padding:3px 10px;border-radius:8px;border:1px solid #e53935;background:rgba(229,57,53,.12);color:#ef9a9a;font-size:.75rem;cursor:pointer;font-family:'Sarabun',sans-serif;">${label}</button>`;
+
+      // 1. Swap entries (แลกเวร)
+      const swp = JSON.parse(localStorage.getItem('swapMap_v1') || '{}');
+      const swpEntries = Object.entries(swp);
+      const seen = new Set();
+      swpEntries.forEach(([dk, e]) => {
+        if (seen.has(dk)) return;
+        const partner = swpEntries.find(([dk2, e2]) => !seen.has(dk2) && dk2 !== dk && e2.original === e.requester && e2.requester === e.original);
+        seen.add(dk);
+        const pdk = partner ? partner[0] : null;
+        if (pdk) seen.add(pdk);
+        const pEntry = partner ? partner[1] : null;
+        const dksArg = pdk ? `${dk}||${pdk}` : dk;
+        const slotTxt = parseInt(e.slot) > 1 ? ' ช่อง ' + e.slot : '';
+        items.push({
+          sortDate: e.date,
+          row: '<td>' + fmtD(e.date) + '</td>'
+            + '<td>' + (SHIFT_ICONS[e.shift] || '') + ' ' + e.shift + slotTxt + '</td>'
+            + '<td><span style="background:#00897b;color:#fff;font-size:.62rem;padding:1px 7px;border-radius:6px;font-weight:700;">แลก</span></td>'
+            + '<td style="font-size:.85rem;"><span style="text-decoration:line-through;opacity:.55;">' + e.original + '</span>'
+            + ' <span style="opacity:.4;margin:0 4px;">→</span> '
+            + '<strong style="color:#4db6ac;">' + e.requester + '</strong>'
+            + (pEntry ? ' <span style="opacity:.5;font-size:.75rem;">(เวร' + pEntry.shift + ' ' + fmtD(pEntry.date) + ')</span>' : '')
+            + '</td>'
+            + '<td>' + cancelBtn("cancelSwapItem('" + dksArg.replace(/'/g, "\\'") + "')") + '</td>'
+        });
+
+      });
+
+      // 2. Sell Transfer (ขายเวรสำเร็จ — มีคนรับแล้ว)
+      Object.entries(sellTransferMap).forEach(([dk, e]) => {
+        items.push({
+          sortDate: e.date,
+          row: '<td>' + fmtD(e.date) + '</td>'
+            + '<td>' + (SHIFT_ICONS[e.shift] || '') + ' ' + e.shift + (parseInt(e.slot) > 1 ? ' ช่อง ' + e.slot : '') + '</td>'
+            + '<td><span style="background:#e65100;color:#fff;font-size:.62rem;padding:1px 7px;border-radius:6px;font-weight:700;">ขาย</span></td>'
+            + '<td style="font-size:.85rem;"><span style="text-decoration:line-through;opacity:.55;">' + e.original + '</span> <span style="opacity:.4;margin:0 4px;">→</span> <strong style="color:#ffb74d;">' + e.buyer + '</strong></td>'
+            + '<td>' + cancelBtn("cancelSellTransfer('" + dk + "','" + e.original + "','" + e.date + "','" + e.shift + "','" + e.slot + "')") + '</td>'
+        });
+      });
+
+      // 3. Sell Announced (ประกาศขาย — ยังหาคนแทน)
+      Object.entries(sellMap).forEach(([dk, e]) => {
+        items.push({
+          sortDate: e.date,
+          row: '<td>' + fmtD(e.date) + '</td>'
+            + '<td>' + (SHIFT_ICONS[e.shift] || '') + ' ' + e.shift + (parseInt(e.slot) > 1 ? ' ช่อง ' + e.slot : '') + '</td>'
+            + '<td><span style="background:#bf360c;color:#fff;font-size:.62rem;padding:1px 7px;border-radius:6px;font-weight:700;">หาคนแทน</span></td>'
+            + '<td style="font-size:.85rem;"><strong style="color:#ffb74d;">' + e.seller + '</strong> <span style="opacity:.55;">หาคนรับแทน...</span></td>'
+            + '<td>' + cancelBtn("cancelSellItem('" + dk + "','" + e.date + "','" + e.shift + "','" + e.slot + "','" + e.seller + "')") + '</td>'
+        });
+      });
+
+      if (!items.length) { logEl.style.display = 'none'; return; }
+      logEl.style.display = 'block';
+      document.getElementById('activityCount').textContent = `(${items.length} รายการ)`;
+
+      // เรียงตามวันที่
+      items.sort((a, b) => a.sortDate.localeCompare(b.sortDate));
+      body.innerHTML = items.map(it => `<tr>${it.row}</tr>`).join('');
+    }
+
+    /* ─── Cancel functions ─── */
+    function cancelSwapItem(dksRaw) {
+      const dks = dksRaw.split('||');
+      dks.forEach(dk => { delete swapMap[dk]; });
+      localStorage.setItem(SWAP_KEY, JSON.stringify(swapMap));
+      const p = { action: 'cancelSwap', dks: dksRaw };
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
+      buildGrid(current.getFullYear(), current.getMonth());
+      renderActivityLog();
+      showToast('↩ ยกเลิกการแลกเวรแล้ว');
+    }
+
+    function cancelSellTransfer(dk, origSeller, date, shift, slot) {
+      // คืนเวรให้ผู้ขายเดิม
+      dutyMap[dk] = origSeller;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dutyMap));
+      delete sellTransferMap[dk];
+      localStorage.setItem('sellTransferMap_v1', JSON.stringify(sellTransferMap));
+      // อัปเดต duty sheet + ลบจาก sellTransfer sheet
+      const p = { date, shift, slot, name: origSeller };
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
+      const p2 = { action: 'cancelSellTransfer', date, shift, slot, seller: origSeller };
+      fetch(GS_URL + '?' + new URLSearchParams(p2).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
+      buildGrid(current.getFullYear(), current.getMonth());
+      renderActivityLog();
+      showToast(`↩ ยกเลิกการขายเวร — คืนเวรให้ ${origSeller}`);
+    }
+
+    function cancelSellItem(dk, date, shift, slot, seller) {
+      delete sellMap[dk];
+      localStorage.setItem('sellMap_v1', JSON.stringify(sellMap));
+      const p = { action: 'cancelSell', date, shift, slot, name: seller };
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
+      buildGrid(current.getFullYear(), current.getMonth());
+      renderActivityLog();
+      showToast('↩ ยกเลิกการประกาศขายเวรแล้ว');
     }
   </script>
 </body>

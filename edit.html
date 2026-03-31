@@ -528,6 +528,22 @@
     .cal-cell.is-sat:hover { background: rgba(128, 176, 255, 0.1); }
     .t-paper .cal-cell.is-sun, .t-paper .cal-cell.is-holiday { background: rgba(211, 47, 47, 0.06); }
     .t-paper .cal-cell.is-sat { background: rgba(25, 118, 210, 0.06); }
+
+    .holiday-label {
+      font-size: .65rem;
+      font-weight: 700;
+      color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.13);
+      border-radius: 5px;
+      padding: 2px 5px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: block;
+    }
+    .t-paper .holiday-label { color: #c62828; background: rgba(198, 40, 40, 0.08); }
   </style>
 </head>
 
@@ -619,6 +635,11 @@
     // โหลดจาก localStorage หรือเริ่มว่าง
     let dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
 
+    // โหลดวันหยุดจาก localStorage (sync มาจาก sheet วันหยุด)
+    const _hlCache = localStorage.getItem('holidayMap_v1');
+    let holidayMap = {};
+    if (_hlCache) { try { holidayMap = JSON.parse(_hlCache).data || {}; } catch {} }
+
     // Modal state
     let modalDate = '', modalShift = '', modalSlot = 1;
 
@@ -704,13 +725,27 @@
       cell.appendChild(num);
 
       const dateStr = fmtDate(dateObj);
+      const holidayName = !otherMonth ? (holidayMap[dateStr] || '') : '';
+
+      // is-holiday class (วันธรรมดาที่เป็นวันหยุด)
+      if (holidayName && dow !== 0 && dow !== 6) cell.classList.add('is-holiday');
+
+      // แสดงชื่อวันหยุด
+      if (holidayName) {
+        const lbl = document.createElement('span');
+        lbl.className = 'holiday-label';
+        lbl.title = holidayName;
+        lbl.textContent = '🎌 ' + holidayName;
+        cell.appendChild(lbl);
+      }
 
       const shiftsDiv = document.createElement('div');
       shiftsDiv.className = 'shifts';
 
       SHIFTS.forEach(({ key, cls, icon, slots }) => {
         const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-        if (key === 'เช้า' && !isWeekend) return;
+        const isHoliday = !!holidayMap[dateStr];
+        if (key === 'เช้า' && !isWeekend && !isHoliday) return;
 
         const group = document.createElement('div');
         group.className = `shift-group sg-${cls}`;
