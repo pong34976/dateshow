@@ -1434,6 +1434,18 @@
     /* ─── Init: show swap log if any ─── */
     renderStaffButtons();
     renderLog();
+
+    // Auto Update on Focus via LocalStorage
+    window.addEventListener('focus', () => {
+      dutyMap = JSON.parse(localStorage.getItem(DUTY_KEY) || '{}');
+      swapMap = JSON.parse(localStorage.getItem(SWAP_KEY) || '{}');
+      staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
+      renderStaffButtons();
+      if (requester) {
+        buildGrid(current.getFullYear(), current.getMonth());
+      }
+      renderLog();
+    });
   </script>
 
 </body>

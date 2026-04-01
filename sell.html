@@ -487,6 +487,17 @@
     /* ── Init ── */
     renderStaffButtons();
 
+    // Auto Update on Focus via LocalStorage
+    window.addEventListener('focus', () => {
+      dutyMap = JSON.parse(localStorage.getItem(DUTY_KEY) || '{}');
+      sellTransferMap = JSON.parse(localStorage.getItem('sellTransferMap_v1') || '{}');
+      staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
+      renderStaffButtons();
+      if (seller) {
+        buildGrid(current.getFullYear(), current.getMonth());
+      }
+    });
+
     /* ── Theme ── */
     const THEME_MAP = { cosmic:'', paper:'t-paper', candy:'t-candy', coffee:'t-coffee', dark:'t-dark' };
     const savedTheme = localStorage.getItem('theme') || '';

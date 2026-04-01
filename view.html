@@ -694,6 +694,16 @@
     if (targetName) {
       buildGrid(current.getFullYear(), current.getMonth());
     }
+
+    // Auto Update on Focus via LocalStorage
+    window.addEventListener('focus', () => {
+      dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      swapMap = JSON.parse(localStorage.getItem('swapMap_v1') || '{}');
+      staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
+      if (targetName) {
+        buildGrid(current.getFullYear(), current.getMonth());
+      }
+    });
   </script>
 </body>
 

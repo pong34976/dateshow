@@ -840,10 +840,13 @@
       if(!isAuto && !confirm('ยืนยันดึงข้อมูลล่าสุดจาก Google Sheets? (จะโหลดมาทับข้อมูลในเครื่อง)')) return;
       
       const btn = document.querySelector('button[onclick="syncFromCloud()"]');
-      const oldTxt = btn.innerHTML;
-      btn.innerHTML = '⏳ โหลด...';
-      btn.style.opacity = '0.7';
-      btn.disabled = true;
+      let oldTxt = '';
+      if(btn) {
+        oldTxt = btn.innerHTML;
+        btn.innerHTML = '⏳ โหลด...';
+        btn.style.opacity = '0.7';
+        btn.disabled = true;
+      }
 
       try {
         const res = await fetch(GS_URL + '?action=sync&t=' + Date.now());
@@ -875,22 +878,27 @@
           
           buildGrid(current.getFullYear(), current.getMonth());
           
-          btn.innerHTML = oldTxt;
-          btn.style.opacity = '1';
-          btn.disabled = false;
+          if(btn) {
+            btn.innerHTML = oldTxt;
+            btn.style.opacity = '1';
+            btn.disabled = false;
+          }
         } else {
           throw new Error('Invalid status from server');
         }
-      } catch (err) {
-        if(!isAuto) alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message + '\n\n** โปรดนำโค้ดใน main.js ไปอัปเดต Deploy (New version) บน Google Apps Script ก่อน **');
-        btn.innerHTML = oldTxt;
-        btn.style.opacity = '1';
-        btn.disabled = false;
+      } catch(err) {
+        if(!isAuto) alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+        else console.error('Auto sync failed:', err);
+        if(btn) {
+          btn.innerHTML = oldTxt;
+          btn.style.opacity = '1';
+          btn.disabled = false;
+        }
       }
     }
 
     // Auto Refresh
-    syncFromCloud(true);
+    setTimeout(() => syncFromCloud(true), 500);
     setInterval(() => syncFromCloud(true), AUTO_SYNC_MINUTES * 60 * 1000);
   </script>
 
