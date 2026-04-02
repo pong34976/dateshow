@@ -813,10 +813,18 @@
         if (!dk.startsWith(pfx)) return; // ข้ามเดือนอื่น
         const parts = dk.split('|');
         const shift = parts[1] || '';
-        // นับคนที่ถูก swap/transfer ด้วย (ใช้ชื่อที่อยู่ใน dutyMap ณ ตอนนี้)
-        if (countMap[name]) {
-          countMap[name].total++;
-          if (countMap[name][shift] !== undefined) countMap[name][shift]++;
+        
+        // คำนึงถึง swap และ transfer ด้วย
+        const swapEntry = swapMap[dk];
+        const transferEntry = sellTransferMap[dk];
+        let effectiveName = name;
+        if (transferEntry) effectiveName = transferEntry.buyer;
+        else if (swapEntry) effectiveName = swapEntry.requester;
+
+        // นับคนที่ถูก swap/transfer ด้วย (ใช้ effectiveName แทน)
+        if (countMap[effectiveName]) {
+          countMap[effectiveName].total++;
+          if (countMap[effectiveName][shift] !== undefined) countMap[effectiveName][shift]++;
         }
       });
 
@@ -982,11 +990,12 @@
               `;
             } else if (transferEntry) {
               // ขายเวร: ~~seller~~ ขาย buyer
+              const displayBuyer = transferEntry.buyer; // ป้องกันบักตอน sync ทีหลัง
               html = `
-                <div class="view-shift is-swapped" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;" title="${key} - ขาย: ${transferEntry.original} → ${name}">
+                <div class="view-shift is-swapped" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;" title="${key} - ขาย: ${transferEntry.original} → ${displayBuyer}">
                   <span class="swap-badge-idx" style="background:#e65100;">ขาย</span>
                   <span class="swap-old">${icon} ${transferEntry.original}</span>
-                  <span class="swap-new">${name}</span>
+                  <span class="swap-new">${displayBuyer}</span>
                 </div>
               `;
             } else if (sellEntry) {

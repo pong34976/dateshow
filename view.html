@@ -592,6 +592,7 @@
     // โหลดข้อมูลจาก localStorage
     let dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     let swapMap = JSON.parse(localStorage.getItem('swapMap_v1') || '{}');
+    let sellTransferMap = JSON.parse(localStorage.getItem('sellTransferMap_v1') || '{}');
 
     // ─── Holiday map ─────────────────────────────────────────────
     const HOLIDAY_FALLBACK = {
@@ -708,14 +709,25 @@
             const dk = dutyKey(dateStr, key, s);
             const originalName = dutyMap[dk] || '';
             const swapEntry = swapMap[dk];
+            const transferEntry = sellTransferMap[dk];
             
-            // Effective owner: if swapped, the requester owns it. if not, originalName owns it.
-            const effectiveOwner = swapEntry ? swapEntry.requester : originalName;
+            // Effective owner: if transferred, buyer owns it. if swapped, requester owns it. if not, originalName owns it.
+            let effectiveOwner = originalName;
+            if (transferEntry) effectiveOwner = transferEntry.buyer;
+            else if (swapEntry) effectiveOwner = swapEntry.requester;
 
             if (effectiveOwner === targetName) {
               hasDuty = true;
               
-              if (swapEntry) {
+              if (transferEntry) {
+                // This shift was received via sell transfer
+                html += `
+                  <div class="shift-slot big-shift-slot" style="cursor:default; height:100%; min-height:55px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius: 8px; margin-top: 5px; position:relative;">
+                    <span style="position:absolute; top:2px; right:4px; font-size:0.55rem; background:#e65100; color:#fff; padding:1px 4px; border-radius:4px; font-weight:700;">ซื้อเวรมา</span>
+                    <span style="font-size:1.6rem; font-weight:800;">${key}</span>
+                  </div>
+                `;
+              } else if (swapEntry) {
                 // This shift was received via swap
                 html += `
                   <div class="shift-slot big-shift-slot" style="cursor:default; height:100%; min-height:55px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius: 8px; margin-top: 5px; position:relative;">
@@ -763,9 +775,13 @@
         if (!dk.startsWith(pfx)) return;
         const parts = dk.split('|');
         const shift = parts[1] || '';
-        // คำนึงถึง swap ด้วย
+        // คำนึงถึง swap และ transfer ด้วย
         const swapEntry = swapMap[dk];
-        const effectiveName = swapEntry ? swapEntry.requester : name;
+        const transferEntry = sellTransferMap[dk];
+        let effectiveName = name;
+        if (transferEntry) effectiveName = transferEntry.buyer;
+        else if (swapEntry) effectiveName = swapEntry.requester;
+        
         if (effectiveName !== targetName) return;
         if (shift === 'เช้า') morn++;
         else if (shift === 'บ่าย') aftn++;
@@ -821,14 +837,23 @@
       buildGrid(current.getFullYear(), current.getMonth());
     }
 
-    // Auto Update on Focus via LocalStorage
-    window.addEventListener('focus', () => {
+    // Auto Update on Focus via LocalStorage (รองรับ Mobile ด้วย)
+    function reloadData() {
       dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
       swapMap = JSON.parse(localStorage.getItem('swapMap_v1') || '{}');
+      sellTransferMap = JSON.parse(localStorage.getItem('sellTransferMap_v1') || '{}');
       staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
       if (targetName) {
         buildGrid(current.getFullYear(), current.getMonth());
       }
+    }
+
+    window.addEventListener('focus', reloadData);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') reloadData();
+    });
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) reloadData();
     });
   </script>
 </body>
