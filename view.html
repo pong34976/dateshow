@@ -475,6 +475,23 @@
     .t-paper .stat-chip.s-afternoon { background: rgba(191,54,12,.1);  border-color: rgba(191,54,12,.2);  color: #bf360c; }
     .t-paper .stat-chip.s-night     { background: rgba(13,71,161,.1);  border-color: rgba(13,71,161,.2);  color: #0d47a1; }
     .t-paper .stat-chip.s-total     { background: rgba(0,0,0,.06);     border-color: rgba(0,0,0,.12);     color: #3e2723; }
+
+    /* Holiday label */
+    .holiday-label {
+      font-size: .65rem;
+      font-weight: 700;
+      color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.13);
+      border-radius: 5px;
+      padding: 2px 5px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: block;
+    }
+    .t-paper .holiday-label { color: #c62828; background: rgba(198,40,40,.08); }
   </style>
 </head>
 
@@ -576,6 +593,32 @@
     let dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     let swapMap = JSON.parse(localStorage.getItem('swapMap_v1') || '{}');
 
+    // ─── Holiday map ─────────────────────────────────────────────
+    const HOLIDAY_FALLBACK = {
+      '2025-01-01':'วันขึ้นปีใหม่','2025-02-12':'วันมาฆบูชา',
+      '2025-04-06':'วันจักรี','2025-04-13':'วันสงกรานต์','2025-04-14':'วันสงกรานต์','2025-04-15':'วันสงกรานต์',
+      '2025-05-01':'วันแรงงานแห่งชาติ','2025-05-04':'วันฉัตรมงคล',
+      '2025-05-12':'วันหยุดชดเชยวันวิสาขบูชา','2025-06-03':'วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ',
+      '2025-07-28':'วันเฉลิมพระชนมพรรษา รัชกาลที่ 10','2025-07-29':'วันอาสาฬบูชา','2025-07-30':'วันเข้าพรรษา',
+      '2025-08-12':'วันเฉลิมพระชนมพรรษา สมเด็จพระบรมราชชนนีพันปีหลวง',
+      '2025-10-13':'วันนวมินทรมหาราช','2025-10-23':'วันปิยมหาราช',
+      '2025-12-05':'วันพ่อแห่งชาติ','2025-12-10':'วันรัฐธรรมนูญ','2025-12-31':'วันสิ้นปี',
+      '2026-01-01':'วันขึ้นปีใหม่','2026-01-02':'วันหยุดราชการเพิ่มเป็นกรณีพิเศษ',
+      '2026-03-03':'วันมาฆบูชา',
+      '2026-04-06':'วันจักรี','2026-04-13':'วันสงกรานต์','2026-04-14':'วันสงกรานต์','2026-04-15':'วันสงกรานต์',
+      '2026-05-01':'วันแรงงานแห่งชาติ','2026-05-04':'วันฉัตรมงคล',
+      '2026-06-01':'วันหยุดชดเชยวันวิสาขบูชา','2026-06-03':'วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ',
+      '2026-07-28':'วันเฉลิมพระชนมพรรษา รัชกาลที่ 10','2026-07-29':'วันอาสาฬบูชา','2026-07-30':'วันเข้าพรรษา',
+      '2026-08-12':'วันเฉลิมพระชนมพรรษา สมเด็จพระบรมราชชนนีพันปีหลวง',
+      '2026-10-13':'วันนวมินทรมหาราช','2026-10-23':'วันปิยมหาราช',
+      '2026-12-07':'วันหยุดชดเชยวันพ่อแห่งชาติ','2026-12-10':'วันรัฐธรรมนูญ','2026-12-31':'วันสิ้นปี',
+    };
+    let holidayMap = { ...HOLIDAY_FALLBACK };
+    try {
+      const _h = localStorage.getItem('holidayMap_v1');
+      if (_h) { const { data } = JSON.parse(_h); holidayMap = { ...HOLIDAY_FALLBACK, ...(data || {}) }; }
+    } catch {}
+
     function fmtDate(d) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -631,12 +674,22 @@
         dateObj.getDate() === TODAY.getDate();
       if (isToday) cell.classList.add('is-today');
 
+      const dateStr = fmtDate(dateObj);
+      const holidayName = !otherMonth ? (holidayMap[dateStr] || '') : '';
+      if (holidayName && dow !== 0 && dow !== 6) cell.classList.add('is-holiday');
+
       const num = document.createElement('div');
       num.className = 'day-num';
       num.textContent = dayNum;
       cell.appendChild(num);
 
-      const dateStr = fmtDate(dateObj);
+      if (holidayName) {
+        const lbl = document.createElement('span');
+        lbl.className = 'holiday-label';
+        lbl.title = holidayName;
+        lbl.textContent = '🎌 ' + holidayName;
+        cell.appendChild(lbl);
+      }
 
       const shiftsDiv = document.createElement('div');
       shiftsDiv.className = 'shifts';
@@ -645,7 +698,8 @@
       if (targetName) {
         SHIFTS.forEach(({ key, cls, icon, slots }) => {
           const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-          if (key === 'เช้า' && !isWeekend) return;
+          const isHoliday = !!holidayMap[dateStr];
+          if (key === 'เช้า' && !isWeekend && !isHoliday) return;
 
           let hasDuty = false;
           let html = '';
