@@ -801,16 +801,43 @@
       const legObj = document.getElementById('staffLegend');
       if (!legObj) return;
       legObj.innerHTML = '';
+
+      // ─── นับเวรต่อคนในเดือนที่กำลังดู ───
+      const yr = current.getFullYear();
+      const mo = current.getMonth();
+      const pfx = `${yr}-${String(mo + 1).padStart(2, '0')}-`; // e.g. "2026-04-"
+      const countMap = {}; // name → { total, เช้า, บ่าย, ดึก }
+      Object.keys(staffMap).forEach(k => { countMap[k] = { total: 0, 'เช้า': 0, 'บ่าย': 0, 'ดึก': 0 }; });
+
+      Object.entries(dutyMap).forEach(([dk, name]) => {
+        if (!dk.startsWith(pfx)) return; // ข้ามเดือนอื่น
+        const parts = dk.split('|');
+        const shift = parts[1] || '';
+        // นับคนที่ถูก swap/transfer ด้วย (ใช้ชื่อที่อยู่ใน dutyMap ณ ตอนนี้)
+        if (countMap[name]) {
+          countMap[name].total++;
+          if (countMap[name][shift] !== undefined) countMap[name][shift]++;
+        }
+      });
+
       Object.keys(staffMap).forEach(k => {
         const st = staffMap[k];
+        const cnt = countMap[k] || { total: 0, 'เช้า': 0, 'บ่าย': 0, 'ดึก': 0 };
         const a = document.createElement('a');
-        a.href = `view.html?n=${encodeURIComponent(st.name)}`; // link by name
+        a.href = `view.html?n=${encodeURIComponent(st.name)}`;
         a.className = 'leg-chip';
-        a.title = `ดูเวร ${st.name}`;
-        a.innerHTML = `<div class="leg-dot" style="background:${st.color}"></div>${st.name}`;
+        const tip = `เช้า ${cnt['เช้า']} · บ่าย ${cnt['บ่าย']} · ดึก ${cnt['ดึก']}`;
+        a.title = `ดูเวร ${st.name} — ${tip}`;
+        a.innerHTML = `
+          <div class="leg-dot" style="background:${st.color}"></div>
+          ${st.name}
+          <span style="font-size:.72rem;opacity:.75;background:rgba(255,255,255,.1);
+            padding:1px 6px;border-radius:10px;margin-left:2px;font-weight:600;
+            color:${st.color};">${cnt.total}</span>`;
         legObj.appendChild(a);
       });
-      // เพิ่มปุ่ม + ที่หน้า Legend
+
+      // ปุ่ม + เพิ่มรายชื่อ
       const addBtn = document.createElement('button');
       addBtn.className = 'leg-chip';
       addBtn.style.border = '1px dashed var(--border)';
@@ -993,14 +1020,17 @@
     document.getElementById('btnPrev').addEventListener('click', () => {
       current.setMonth(current.getMonth() - 1);
       buildGrid(current.getFullYear(), current.getMonth());
+      renderLegend();
     });
     document.getElementById('btnNext').addEventListener('click', () => {
       current.setMonth(current.getMonth() + 1);
       buildGrid(current.getFullYear(), current.getMonth());
+      renderLegend();
     });
     document.getElementById('btnToday').addEventListener('click', () => {
       current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
       buildGrid(current.getFullYear(), current.getMonth());
+      renderLegend();
     });
 
     // ─── Theme switcher (localStorage) ───────────────────────────────────
@@ -1025,9 +1055,8 @@
 
     // ─── Init ─────────────────────────────────────────────
     renderLegend();
-    buildGrid(current.getFullYear(), current.getMonth());
+    fetchHolidays(); // โหลดวันหยุดก่อน แล้ว buildGrid ข้างในจะเรียกเอง
     renderActivityLog();
-    fetchHolidays(); // async: re-renders grid when holidays loaded
 
     const AUTO_SYNC_MINUTES = 30;
 
@@ -1105,6 +1134,13 @@
             const liveHolidays = json.data.holidays;
             holidayMap = { ...HOLIDAY_FALLBACK, ...liveHolidays };
             saveHolidayCache();
+          } else {
+            // ไม่มีข้อมูลจาก server → ใช้ cache หรือ fallback เสมอ
+            if (!loadHolidayCache()) {
+              holidayMap = { ...HOLIDAY_FALLBACK };
+            } else {
+              holidayMap = { ...HOLIDAY_FALLBACK, ...holidayMap };
+            }
           }
 
           // 4. Process Sells
@@ -1167,7 +1203,12 @@
       sellMap = JSON.parse(localStorage.getItem('sellMap_v1') || '{}');
       sellTransferMap = JSON.parse(localStorage.getItem('sellTransferMap_v1') || '{}');
       staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
-      
+
+      // โหลด holidayMap จาก cache (ถ้ายังไม่หมดอายุ)
+      if (loadHolidayCache()) {
+        holidayMap = { ...HOLIDAY_FALLBACK, ...holidayMap };
+      }
+
       renderLegend();
       buildGrid(current.getFullYear(), current.getMonth());
       renderActivityLog();

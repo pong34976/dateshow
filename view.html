@@ -441,6 +441,40 @@
     .cal-cell.is-sat:hover { background: rgba(128, 176, 255, 0.1); }
     .t-paper .cal-cell.is-sun, .t-paper .cal-cell.is-holiday { background: rgba(211, 47, 47, 0.06); }
     .t-paper .cal-cell.is-sat { background: rgba(25, 118, 210, 0.06); }
+
+    /* ── Shift stat bar ── */
+    .stat-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: .82rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      transition: transform .15s;
+    }
+    .stat-chip:hover { transform: scale(1.05); }
+    .stat-chip .s-num {
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .stat-chip.s-morning  { background: rgba(255,220,60,.13); border-color: rgba(255,220,60,.25); color: #fdd835; }
+    .stat-chip.s-afternoon{ background: rgba(255,140,40,.13); border-color: rgba(255,140,40,.25); color: #ffb74d; }
+    .stat-chip.s-night    { background: rgba(100,140,255,.13); border-color: rgba(100,140,255,.25); color: #90caf9; }
+    .stat-chip.s-total    { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.15); color: var(--hdr-txt); }
+    .t-paper .stat-chip.s-morning   { background: rgba(230,81,0,.1);   border-color: rgba(230,81,0,.2);   color: #e65100; }
+    .t-paper .stat-chip.s-afternoon { background: rgba(191,54,12,.1);  border-color: rgba(191,54,12,.2);  color: #bf360c; }
+    .t-paper .stat-chip.s-night     { background: rgba(13,71,161,.1);  border-color: rgba(13,71,161,.2);  color: #0d47a1; }
+    .t-paper .stat-chip.s-total     { background: rgba(0,0,0,.06);     border-color: rgba(0,0,0,.12);     color: #3e2723; }
   </style>
 </head>
 
@@ -467,7 +501,15 @@
   <!-- Calendar -->
   <div class="calendar">
     <div class="cal-header">
-      <div class="cal-title" id="calTitle">มีนาคม <span>2569</span></div>
+      <div>
+        <div class="cal-title" id="calTitle">มีนาคม <span>2569</span></div>
+        <div class="stat-bar" id="statBar">
+          <div class="stat-chip s-morning"  id="statMorn">  🌅 <span class="s-lbl">เช้า</span> <span class="s-num" id="cntMorn">0</span></div>
+          <div class="stat-chip s-afternoon" id="statAftn"> ☀️ <span class="s-lbl">บ่าย</span> <span class="s-num" id="cntAftn">0</span></div>
+          <div class="stat-chip s-night"    id="statNight">🌙 <span class="s-lbl">ดึก</span>  <span class="s-num" id="cntNight">0</span></div>
+          <div class="stat-chip s-total"    id="statTotal">📊 รวม <span class="s-num" id="cntTotal">0</span> เวร</div>
+        </div>
+      </div>
       <div class="nav-group">
         <button class="nav-btn" id="btnPrev">&#8249;</button>
         <button class="nav-btn" id="btnNext">&#8250;</button>
@@ -569,6 +611,8 @@
 
       document.getElementById('calTitle').innerHTML =
         `${THAI_MONTHS[month]} <span>${year + 543}</span>`;
+
+      renderStats(year, month);
     }
 
     function addCell(dayNum, otherMonth, dateObj) {
@@ -654,6 +698,34 @@
 
       cell.appendChild(shiftsDiv);
       grid.appendChild(cell);
+    }
+
+    // ─── Stat counter ──────────────────────────
+    function renderStats(year, month) {
+      if (!targetName) return;
+      const pfx = `${year}-${String(month + 1).padStart(2, '0')}-`;
+      let morn = 0, aftn = 0, night = 0;
+      Object.entries(dutyMap).forEach(([dk, name]) => {
+        if (!dk.startsWith(pfx)) return;
+        const parts = dk.split('|');
+        const shift = parts[1] || '';
+        // คำนึงถึง swap ด้วย
+        const swapEntry = swapMap[dk];
+        const effectiveName = swapEntry ? swapEntry.requester : name;
+        if (effectiveName !== targetName) return;
+        if (shift === 'เช้า') morn++;
+        else if (shift === 'บ่าย') aftn++;
+        else if (shift === 'ดึก') night++;
+      });
+      const total = morn + aftn + night;
+      document.getElementById('cntMorn').textContent  = morn;
+      document.getElementById('cntAftn').textContent  = aftn;
+      document.getElementById('cntNight').textContent = night;
+      document.getElementById('cntTotal').textContent = total;
+      // ไฮไลต์ chip ที่ไม่มีเวร
+      document.getElementById('statMorn').style.opacity  = morn  ? '1' : '0.35';
+      document.getElementById('statAftn').style.opacity  = aftn  ? '1' : '0.35';
+      document.getElementById('statNight').style.opacity = night ? '1' : '0.35';
     }
 
     // ─── Nav buttons ─────────────────────────────────────

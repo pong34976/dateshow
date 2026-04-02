@@ -172,10 +172,10 @@
   <!-- Step 2 -->
   <div id="step2">
     <div class="seller-banner">
-      🏷️ ผู้ขาย: <strong id="sellerLabel">–</strong>
+      ️༻ ผู้ขาย: <strong id="sellerLabel">–</strong>
       <button class="change-btn" onclick="changeSeller()">เปลี่ยน</button>
     </div>
-    <p class="hint-txt">👆 คลิกที่กะเวรของคุณเพื่อเลือกคนมารับแทน</p>
+    <p class="hint-txt">� คลิกที่กะเวรของคุณเพื่อเลือกคนมารับแทน</p>
     <div class="calendar">
       <div class="cal-header">
         <div class="cal-title" id="calTitle">– <span>–</span></div>
@@ -191,6 +191,12 @@
         <div class="day-lbl sat">ส</div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <!-- รายการโอน/ขายเวรล่าสุด -->
+    <div id="transferLog" style="margin-top:18px;display:none;">
+      <div style="font-size:.88rem;font-weight:700;color:var(--hdr-txt);margin-bottom:10px;opacity:.8;">📋 รายการขายเวรล่าสุด (คลิกเพื่อยกเลิก)</div>
+      <div id="transferLogBody"></div>
     </div>
   </div>
 
@@ -234,6 +240,8 @@
     // transfer history map
     let sellTransferMap = {};
     try { sellTransferMap = JSON.parse(localStorage.getItem('sellTransferMap_v1') || '{}'); } catch {}
+    let sellMap = {};
+    try { sellMap = JSON.parse(localStorage.getItem('sellMap_v1') || '{}'); } catch {}
 
     function fmtDate(d) {
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -300,6 +308,7 @@
       document.getElementById('step1').style.display = 'none';
       document.getElementById('step2').style.display = 'block';
       buildGrid(current.getFullYear(), current.getMonth());
+      renderTransferLog(); // แสดงรายการที่เคยขายไปแล้ว
     }
     function changeSeller() {
       seller = '';
@@ -443,6 +452,10 @@
       dutyMap[dk] = buyerName;
       localStorage.setItem(DUTY_KEY, JSON.stringify(dutyMap));
 
+      // ลบออกจาก sellMap (ถ้ามี)
+      delete sellMap[dk];
+      localStorage.setItem('sellMap_v1', JSON.stringify(sellMap));
+
       // บันทึก transfer record (แสดง ~~seller~~ ขาย buyer)
       sellTransferMap[dk] = { original: seller, buyer: buyerName, date: dateStr, shift, slot, savedAt: new Date().toISOString() };
       localStorage.setItem('sellTransferMap_v1', JSON.stringify(sellTransferMap));
@@ -455,12 +468,17 @@
       const pt = { action:'sellTransfer', date:dateStr, shift, slot, seller, buyer:buyerName };
       fetch(GS_URL + '?' + new URLSearchParams(pt).toString() + '&t=' + Date.now(), { mode:'no-cors' })
         .catch(e => console.warn(e));
+      // ยกเลิก sell announcement (ถ้ามี)
+      const ps = { action:'cancelSell', date:dateStr, shift, slot, name:seller };
+      fetch(GS_URL + '?' + new URLSearchParams(ps).toString() + '&t=' + Date.now(), { mode:'no-cors' })
+        .catch(e => console.warn(e));
 
       // update steps
       document.getElementById('sdot3').className = 'step-dot done';
       document.getElementById('sdot3').textContent = '✓';
 
       buildGrid(current.getFullYear(), current.getMonth());
+      renderTransferLog();
 
       const d = new Date(dateStr);
       const thaiDate = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
@@ -473,6 +491,65 @@
         document.getElementById('sdot3').className = 'step-dot';
         document.getElementById('sdot3').textContent = '3';
       }, 2000);
+    }
+
+    /* ── ยกเลิกการขายเวร ── */
+    function cancelTransfer(dk) {
+      const entry = sellTransferMap[dk];
+      if (!entry) return;
+      if (!confirm(`ยืนยันยกเลิกการขายเวร?\n${entry.original} → ${entry.buyer}\nเวร${entry.shift} ${entry.date}`)) return;
+
+      // คืน duty ให้ seller เดิม
+      dutyMap[dk] = entry.original;
+      localStorage.setItem(DUTY_KEY, JSON.stringify(dutyMap));
+
+      // ลบ transfer record
+      delete sellTransferMap[dk];
+      localStorage.setItem('sellTransferMap_v1', JSON.stringify(sellTransferMap));
+
+      // ส่งไปยัง Sheets: คืน duty + ลบ sellTransfer
+      const p = { date: entry.date, shift: entry.shift, slot: entry.slot, name: entry.original };
+      fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode:'no-cors' })
+        .catch(e => console.warn(e));
+      const p2 = { action:'cancelSellTransfer', date:entry.date, shift:entry.shift, slot:entry.slot, seller:entry.original };
+      fetch(GS_URL + '?' + new URLSearchParams(p2).toString() + '&t=' + Date.now(), { mode:'no-cors' })
+        .catch(e => console.warn(e));
+
+      buildGrid(current.getFullYear(), current.getMonth());
+      renderTransferLog();
+      showToast(`↩ ยกเลิกแล้ว — คืนเวรให้ ${entry.original}`);
+    }
+
+    /* ── แสดงรายการขายเวรล่าสุด ── */
+    const SHIFT_ICONS = { 'เช้า':'🌅', 'บ่าย':'☀️', 'ดึก':'🌙' };
+    function renderTransferLog() {
+      const logEl = document.getElementById('transferLog');
+      const body  = document.getElementById('transferLogBody');
+      if (!logEl || !body) return;
+
+      // กรอง entries ที่ seller คือคนที่เลือก
+      const entries = Object.entries(sellTransferMap).filter(([, e]) => e.original === seller);
+      if (!entries.length) { logEl.style.display = 'none'; return; }
+
+      logEl.style.display = 'block';
+      body.innerHTML = entries.map(([dk, e]) => {
+        const d = new Date(e.date);
+        const thaiDate = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
+        const icon = SHIFT_ICONS[e.shift] || '';
+        return `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.05);
+            border:1px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:.85rem;">
+            <span style="flex:1;color:var(--txt);">
+              ${icon} <strong style="color:#ffb74d;">${e.shift}</strong>
+              · ${thaiDate}<br>
+              <span style="opacity:.6;font-size:.78rem;"><s>${e.original}</s> → <strong style="color:#4db6ac;">${e.buyer}</strong></span>
+            </span>
+            <button onclick="cancelTransfer('${dk.replace(/'/g,"\\'")}')"
+              style="padding:5px 12px;border-radius:8px;border:1px solid #e53935;
+              background:rgba(229,57,53,.12);color:#ef9a9a;font-size:.78rem;
+              cursor:pointer;font-family:'Sarabun',sans-serif;white-space:nowrap;">✕ ยกเลิก</button>
+          </div>`;
+      }).join('');
     }
 
     document.getElementById('pickOverlay').addEventListener('click', e => {
@@ -491,10 +568,12 @@
     window.addEventListener('focus', () => {
       dutyMap = JSON.parse(localStorage.getItem(DUTY_KEY) || '{}');
       sellTransferMap = JSON.parse(localStorage.getItem('sellTransferMap_v1') || '{}');
+      sellMap = JSON.parse(localStorage.getItem('sellMap_v1') || '{}');
       staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
       renderStaffButtons();
       if (seller) {
         buildGrid(current.getFullYear(), current.getMonth());
+        renderTransferLog();
       }
     });
 
