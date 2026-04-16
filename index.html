@@ -603,9 +603,10 @@
     <div class="theme-bar">
       <a href="qhd.html" class="btn-action" style="background:#1565c0;">📅 ตารางงาน</a>
       <a href="edit.html" class="btn-action">✏️ ตั้งเวร</a>
-
+      <a href="addall.html" class="btn-action" style="background:#e65100;">✏️ addall</a>
       <a href="move.html" class="btn-action" style="background:#00897b;">🔄 แลกเวร</a>
       <a href="sell.html" class="btn-action" style="background:#e65100;">🏷️ ขายเวร</a>
+
       <button onclick="syncFromCloud()" class="btn-action" style="background:#e53935; border:none; cursor:pointer;">
         🔄 Refresh
       </button>
@@ -813,7 +814,7 @@
         if (!dk.startsWith(pfx)) return; // ข้ามเดือนอื่น
         const parts = dk.split('|');
         const shift = parts[1] || '';
-        
+
         // คำนึงถึง swap และ transfer ด้วย
         const swapEntry = swapMap[dk];
         const transferEntry = sellTransferMap[dk];

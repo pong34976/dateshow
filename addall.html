@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>เพิ่มเวรทั้งหมด (Add All)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+    
+    :root {
+      --bg: #0f0c29;
+      --bg2: radial-gradient(ellipse at 20% 0%, #302060 0%, #0f0c29 65%);
+      --hdr: rgba(255, 255, 255, 0.05);
+      --hdr-txt: #fff;
+      --day-lbl: rgba(255, 255, 255, 0.45);
+      --cell: rgba(255, 255, 255, 0.03);
+      --cell-hov: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.08);
+      --txt: #ddd;
+      --nav: rgba(255, 255, 255, 0.12);
+      --nav-hov: rgba(255, 255, 255, 0.24);
+      --accent: #7c4dff;
+      --shadow: 0 8px 40px rgba(0, 0, 0, .55);
+      --radius: 18px;
+      --input-bg: rgba(0,0,0,0.2);
+    }
+
+    .t-coffee {
+      --bg: #1c140d;
+      --bg2: radial-gradient(ellipse at 20% 0%, #3d2b1f, #1c140d 65%);
+      --hdr: rgba(215, 204, 200, 0.08);
+      --hdr-txt: #efebe9;
+      --cell: rgba(215, 204, 200, 0.05);
+      --cell-hov: rgba(215, 204, 200, 0.1);
+      --border: rgba(141, 110, 99, 0.2);
+      --txt: #d7ccc8;
+      --accent: #a1887f;
+      --input-bg: rgba(0,0,0,0.3);
+    }
+
+    .t-dark {
+      --bg: #000000;
+      --bg2: radial-gradient(ellipse at 20% 0%, #0a0a0a, #000000 65%);
+      --hdr: rgba(0, 255, 255, 0.05);
+      --hdr-txt: #ffffff;
+      --cell: rgba(255, 255, 255, 0.03);
+      --cell-hov: rgba(0, 255, 255, 0.1);
+      --border: rgba(255, 255, 255, 0.1);
+      --txt: #e0e0e0;
+      --accent: #00bcd4;
+      --input-bg: rgba(255,255,255,0.05);
+    }
+
+    .t-candy {
+      --bg: #2d0a1c;
+      --bg2: radial-gradient(ellipse at 20% 0%, #5c1839, #2d0a1c 65%);
+      --hdr: rgba(255, 64, 129, 0.18);
+      --hdr-txt: #ffffff;
+      --cell: rgba(255, 128, 171, 0.1);
+      --cell-hov: rgba(255, 64, 129, 0.22);
+      --border: rgba(255, 128, 171, 0.25);
+      --txt: #ffe0eb;
+      --accent: #ff4081;
+      --input-bg: rgba(0,0,0,0.25);
+    }
+
+    .t-paper {
+      --bg: #f8f4e6;
+      --bg2: linear-gradient(135deg, #fdfbf7, #e0d8c3);
+      --hdr: rgba(120, 80, 40, .12);
+      --hdr-txt: #2a1a08;
+      --cell: rgba(255, 255, 255, .7);
+      --cell-hov: rgba(120, 80, 40, .08);
+      --border: rgba(120, 80, 40, .2);
+      --txt: #1a1005;
+      --accent: #5d4037;
+      --input-bg: rgba(255,255,255,0.9);
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg2, var(--bg));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 40px;
+      transition: background .4s;
+      color: var(--txt);
+    }
+
+    .topbar {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .app-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--hdr-txt);
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-title .badge {
+      font-size: .72rem;
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .theme-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .theme-label { color: var(--txt); opacity: .7; font-size: .8rem; }
+    .swatch {
+      width: 24px; height: 24px; border-radius: 50%;
+      cursor: pointer; border: 3px solid transparent;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,.4);
+    }
+    .swatch:hover { transform: scale(1.2); }
+    .swatch.active {
+      border-color: #fff; transform: scale(1.15);
+      box-shadow: 0 0 0 3px rgba(255,255,255,.25);
+    }
+
+    .card {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--cell);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      padding: 20px 26px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .month-picker {
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--txt);
+      font-family: 'Sarabun', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      outline: none;
+    }
+    .month-picker::-webkit-calendar-picker-indicator {
+      filter: invert(0.8);
+      cursor: pointer;
+    }
+    .t-paper .month-picker::-webkit-calendar-picker-indicator {
+      filter: none;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #00b09b, #96c93d);
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Sarabun', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-save:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(0, 176, 155, 0.6);
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table.staff-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    .staff-table th {
+      background: var(--hdr);
+      color: var(--hdr-txt);
+      padding: 12px;
+      text-align: center;
+      font-size: 1.1rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .staff-table th:first-child { text-align: left; border-radius: 12px 0 0 0; }
+    .staff-table th:last-child { border-radius: 0 12px 0 0; }
+
+    .staff-table td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .staff-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-align: left;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .shift-input {
+      width: 100%;
+      min-width: 120px;
+      max-width: 300px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--txt);
+      font-family: 'Sarabun', sans-serif;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .shift-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.2);
+    }
+    
+    .shift-input::placeholder {
+      opacity: 0.4;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .loader-box {
+      width: 90%;
+      max-width: 400px;
+      background: var(--cell);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .loader-title {
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .loader-text {
+      color: #aaa;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      min-height: 44px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      transition: width 0.3s ease;
+      border-radius: 10px;
+    }
+
+    .progress-percent {
+      color: #00c6ff;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="app-title">
+      <a href="index.html" style="text-decoration:none; margin-right:8px; display:inline-block; transform:scale(1.2);" title="กลับหน้าหลัก">🔙</a>
+      📋 จัดการเวร
+      <span class="badge">เพิ่มพร้อมกัน</span>
+    </div>
+    <div class="theme-bar">
+      <span class="theme-label">🎨</span>
+      <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic"></div>
+      <div class="swatch" data-theme="paper" style="background:linear-gradient(135deg,#795548,#f0ebe1)" title="Paper"></div>
+      <div class="swatch" data-theme="coffee" style="background:linear-gradient(135deg,#3d2b1f,#1c140d)" title="Coffee"></div>
+      <div class="swatch" data-theme="dark" style="background:linear-gradient(135deg,#1a1a1a,#000000)" title="Dark"></div>
+      <div class="swatch" data-theme="candy" style="background:linear-gradient(135deg,#ff4081,#2d0a1c)" title="Candy"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="controls">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <label for="monthPicker" style="font-weight:600; color:var(--hdr-txt);">เดือน/ปี ที่จัดเวร:</label>
+        <input type="month" id="monthPicker" class="month-picker" />
+      </div>
+      <div style="flex:1;"></div>
+      <button class="btn-save" onclick="startSaveAll()">💾 บันทึกทั้งหมด</button>
+    </div>
+
+    <div class="table-container">
+      <table class="staff-table">
+        <thead>
+          <tr>
+            <th width="20%">ชื่อ</th>
+            <th width="26%">ช (เช้า)</th>
+            <th width="26%">บ (บ่าย)</th>
+            <th width="26%">ด (ดึก)</th>
+          </tr>
+        </thead>
+        <tbody id="staffTbody">
+          <!-- Rendered by JS -->
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:20px; font-size:0.85rem; opacity:0.6;">
+      * คำแนะนำ: ใส่แค่วันที่คั่นด้วยลูกน้ำหรือเว้นวรรค เช่น <code>1, 5, 12, 18, 20</code> (ไม่จำเป็นต้องเรียงลำดับ)
+    </p>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-box">
+      <div class="loader-title">กำลังประมวลผลบันทึกเวร...</div>
+      <div class="loader-text" id="loaderText">เตรียมข้อมูล...</div>
+      <div class="progress-track">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="progress-percent" id="progressPercent">0%</div>
+    </div>
+  </div>
+
+  <script>
+    // Config API URL
+    const GS_URL = "https://script.google.com/macros/s/AKfycbxwkcBPudJEr_FfHrLvaEOrPjzdu3wC9G3HUHOue_cc--zLoPGVcQNDMS8Tgrv1Q3lx/exec";
+    const STORAGE_KEY = 'dutyMap_v1';
+
+    // Theme Management
+    const THEME_MAP = { cosmic: '', paper: 't-paper', candy: 't-candy', coffee: 't-coffee', dark: 't-dark' };
+    const savedTheme = localStorage.getItem('theme') || '';
+    document.body.className = savedTheme;
+    document.querySelectorAll('.swatch').forEach(s => {
+      const bCls = THEME_MAP[s.dataset.theme] || '';
+      if (bCls === savedTheme || (!savedTheme && s.dataset.theme === 'cosmic')) {
+        s.classList.add('active');
+      }
+      s.addEventListener('click', () => {
+        const cls = THEME_MAP[s.dataset.theme] || '';
+        document.body.className = cls;
+        localStorage.setItem('theme', cls);
+        document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+        s.classList.add('active');
+      });
+    });
+
+    // Load Staff
+    const DEFAULT_STAFF = {
+      'โจ้': { name: 'โจ้', color: '#a78bfa' },
+      'ว่าน': { name: 'ว่าน', color: '#34d399' },
+      'ฟลุ๊ค': { name: 'ฟลุ๊ค', color: '#60a5fa' },
+      'เอ้': { name: 'เอ้', color: '#fbbf24' }
+    };
+    let staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
+    let dutyMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+    // Shift Definitions
+    const SHIFTS = {
+      'เช้า': { slots: 2 },
+      'บ่าย': { slots: 2 },
+      'ดึก': { slots: 1 }
+    };
+
+    // Initialize Month Picker to Next Month (default behavior for planning)
+    const today = new Date();
+    let initYear = today.getFullYear();
+    let initMonth = today.getMonth() + 2; // +1 for 1-based, +1 for next month
+    if (initMonth > 12) {
+      initMonth = 1;
+      initYear++;
+    }
+    document.getElementById('monthPicker').value = `${initYear}-${String(initMonth).padStart(2, '0')}`;
+
+    // Render Table
+    function renderTable() {
+      const tbody = document.getElementById('staffTbody');
+      tbody.innerHTML = '';
+      
+      Object.values(staffMap).forEach(st => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div class="staff-name-cell">
+              <div class="dot" style="background:${st.color}"></div>
+              <span>${st.name}</span>
+            </div>
+          </td>
+          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="เช้า" placeholder="เช่น 1,5,10"></td>
+          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="บ่าย" placeholder="เช่น 2,6,11"></td>
+          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="ดึก" placeholder="เช่น 3,7,12"></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    renderTable();
+
+    // Helper: Find next available slot for a specific date and shift
+    // Or return 1 if full (will overwrite slot 1)
+    function getNextAvailableSlot(dateStr, shiftKey, currentDutyMap) {
+      const maxSlots = SHIFTS[shiftKey].slots;
+      for (let s = 1; s <= maxSlots; s++) {
+        const dk = `${dateStr}|${shiftKey}|${s}`;
+        if (!currentDutyMap[dk]) {
+          return s; // found empty
+        }
+      }
+      return 1; // if all full, default to 1
+    }
+
+    // Process all inputs and generate API request queue
+    async function startSaveAll() {
+      const mp = document.getElementById('monthPicker').value; // YYYY-MM
+      if (!mp) {
+        alert('กรุณาเลือกเดือน/ปีด้วยครับ');
+        return;
+      }
+      
+      const [year, month] = mp.split('-');
+      // Validate how many days in this month
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      const tasks = [];
+      const inputs = document.querySelectorAll('.shift-input');
+      
+      // We will simulate the dutyMap locally to assign correct slots sequentially
+      // clone existing duty map to avoid modifying actual until we decide to save
+      const simDutyMap = { ...dutyMap };
+
+      // Generate Tasks
+      inputs.forEach(input => {
+        const val = input.value.trim();
+        if (!val) return;
+
+        const name = input.getAttribute('data-name');
+        const shift = input.getAttribute('data-shift');
+
+        // Extract numbers
+        const days = val.split(/[, ]+/).map(d => parseInt(d)).filter(d => !isNaN(d));
+        
+        days.forEach(d => {
+          if (d >= 1 && d <= daysInMonth) {
+            const dateStr = `${year}-${month}-${String(d).padStart(2,'0')}`;
+            // figure out slot
+            const slot = getNextAvailableSlot(dateStr, shift, simDutyMap);
+            
+            // Mark it in sim map so next person requesting same day gets next slot
+            const dk = `${dateStr}|${shift}|${slot}`;
+            simDutyMap[dk] = name;
+
+            tasks.push({ date: dateStr, shift, slot, name, dk });
+          }
+        });
+      });
+
+      if (tasks.length === 0) {
+        alert('ไม่มีข้อมูลเวรให้บันทึก (กรุณากรอกวันที่ให้ถูกต้อง)');
+        return;
+      }
+
+      if (!confirm(`ตรวจสอบพบเวรที่ต้องบันทึกทั้งหมด ${tasks.length} รายการ\nต้องการดำเนินการต่อหรือไม่?`)) {
+        return;
+      }
+
+      // Start saving process
+      document.getElementById('loadingOverlay').classList.add('active');
+      document.getElementById('loaderText').innerHTML = `เริ่มบันทึก 0 / ${tasks.length}`;
+      
+      let completed = 0;
+      for (let i = 0; i < tasks.length; i++) {
+        const t = tasks[i];
+        try {
+          const params = new URLSearchParams({ date: t.date, shift: t.shift, slot: t.slot, name: t.name });
+          await fetch(GS_URL + '?' + params.toString() + '&t=' + Date.now(), { mode: 'no-cors' });
+        } catch (err) {
+          console.warn('Fetch error:', err);
+        }
+
+        // Update dutyMap real-time
+        dutyMap[t.dk] = t.name;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dutyMap));
+
+        completed++;
+        const percent = Math.round((completed / tasks.length) * 100);
+        
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('progressPercent').innerText = percent + '%';
+        
+        // Show current saving info (format: 12 มีนาคม)
+        const dateObj = new Date(t.date);
+        const dateDisplay = `${dateObj.getDate()}`;
+        document.getElementById('loaderText').innerHTML = 
+          `กำลังบันทึกเวร <b>${t.name}</b><br/>วันที่ ${dateDisplay} ${t.shift} (ช่อง ${t.slot})<br/><br/>${completed} / ${tasks.length}`;
+
+        // Delay to prevent overwhelming Google Apps Script
+        await new Promise(r => setTimeout(r, 650));
+      }
+
+      // Done
+      document.getElementById('loaderText').innerHTML = `<span style="color:#4caf50; font-size:1.1rem; font-weight:bold;">บันทึกสำเร็จทั้งหมด!</span>`;
+      document.getElementById('progressBar').style.background = '#4caf50';
+      
+      setTimeout(() => {
+        document.getElementById('loadingOverlay').classList.remove('active');
+        alert('บันทึกเวรทั้งหมดเรียบร้อยแล้วระบบจะกลับไปหน้าหลัก');
+        location.href = "index.html";
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
