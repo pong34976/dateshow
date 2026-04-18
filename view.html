@@ -521,8 +521,8 @@
       <div>
         <div class="cal-title" id="calTitle">มีนาคม <span>2569</span></div>
         <div class="stat-bar" id="statBar">
-          <div class="stat-chip s-morning"  id="statMorn">  🌅 <span class="s-lbl">เช้า</span> <span class="s-num" id="cntMorn">0</span></div>
-          <div class="stat-chip s-afternoon" id="statAftn"> ☀️ <span class="s-lbl">บ่าย</span> <span class="s-num" id="cntAftn">0</span></div>
+          <div class="stat-chip s-morning"  id="statMorn">  ☀️ <span class="s-lbl">เช้า</span> <span class="s-num" id="cntMorn">0</span></div>
+          <div class="stat-chip s-afternoon" id="statAftn"> ⛅ <span class="s-lbl">บ่าย</span> <span class="s-num" id="cntAftn">0</span></div>
           <div class="stat-chip s-night"    id="statNight">🌙 <span class="s-lbl">ดึก</span>  <span class="s-num" id="cntNight">0</span></div>
           <div class="stat-chip s-total"    id="statTotal">📊 รวม <span class="s-num" id="cntTotal">0</span> เวร</div>
         </div>
@@ -581,9 +581,9 @@
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const SHIFTS = [
-      { key: 'เช้า', cls: 'morning', icon: '🌅', slots: 2 },
-      { key: 'บ่าย', cls: 'afternoon', icon: '☀️', slots: 2 },
-      { key: 'ดึก', cls: 'night', icon: '🌙', slots: 1 },
+      { key: 'เช้า', display: 'ช', cls: 'morning', icon: '☀️', slots: 2 },
+      { key: 'บ่าย', display: 'บ', cls: 'afternoon', icon: '⛅', slots: 2 },
+      { key: 'ดึก', display: 'ด', cls: 'night', icon: '🌙', slots: 1 },
     ];
 
     const TODAY = new Date();
@@ -697,7 +697,7 @@
 
       // 🛑 ONLY SHOW SHIFTS FOR THE TARGET USER 🛑
       if (targetName) {
-        SHIFTS.forEach(({ key, cls, icon, slots }) => {
+        SHIFTS.forEach(({ key, display, cls, icon, slots }) => {
           const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
           const isHoliday = !!holidayMap[dateStr];
           if (key === 'เช้า' && !isWeekend && !isHoliday) return;
@@ -724,7 +724,7 @@
                 html += `
                   <div class="shift-slot big-shift-slot" style="cursor:default; height:100%; min-height:55px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius: 8px; margin-top: 5px; position:relative;">
                     <span style="position:absolute; top:2px; right:4px; font-size:0.55rem; background:#e65100; color:#fff; padding:1px 4px; border-radius:4px; font-weight:700;">ซื้อเวรมา</span>
-                    <span style="font-size:1.6rem; font-weight:800;">${key}</span>
+                    <span style="font-size:1.6rem; font-weight:800;">${icon} ${display}</span>
                   </div>
                 `;
               } else if (swapEntry) {
@@ -732,14 +732,14 @@
                 html += `
                   <div class="shift-slot big-shift-slot" style="cursor:default; height:100%; min-height:55px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius: 8px; margin-top: 5px; position:relative;">
                     <span style="position:absolute; top:2px; right:4px; font-size:0.55rem; background:#00897b; color:#fff; padding:1px 4px; border-radius:4px; font-weight:700;">แลกเวร</span>
-                    <span style="font-size:1.6rem; font-weight:800;">${key}</span>
+                    <span style="font-size:1.6rem; font-weight:800;">${icon} ${display}</span>
                   </div>
                 `;
               } else {
                 // Normal duty
                 html += `
                   <div class="shift-slot big-shift-slot" style="cursor:default; height:100%; min-height:55px; display:flex; align-items:center; justify-content:center; border-radius: 8px; margin-top: 5px;">
-                    <span style="font-size:1.6rem; font-weight:800;">${key}</span>
+                    <span style="font-size:1.6rem; font-weight:800;">${icon} ${display}</span>
                   </div>
                 `;
               }
@@ -750,12 +750,6 @@
             const group = document.createElement('div');
             group.className = `shift-group sg-${cls}`;
 
-            const hdr = document.createElement('div');
-            hdr.className = 'shift-group-header';
-            hdr.style.justifyContent = 'center';
-            hdr.innerHTML = `<span>${icon}</span>`;
-
-            group.appendChild(hdr);
             group.insertAdjacentHTML('beforeend', html);
             shiftsDiv.appendChild(group);
           }

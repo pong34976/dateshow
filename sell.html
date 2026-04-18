@@ -221,8 +221,8 @@
 
     const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
     const SHIFTS = [
-      { key:'เช้า',  icon:'🌅', slots:2, bg:'sh-morning'   },
-      { key:'บ่าย',  icon:'☀️', slots:2, bg:'sh-afternoon' },
+      { key:'เช้า',  icon:'☀️', slots:2, bg:'sh-morning'   },
+      { key:'บ่าย',  icon:'⛅', slots:2, bg:'sh-afternoon' },
       { key:'ดึก',   icon:'🌙', slots:1, bg:'sh-night'     },
     ];
 
@@ -521,7 +521,7 @@
     }
 
     /* ── แสดงรายการขายเวรล่าสุด ── */
-    const SHIFT_ICONS = { 'เช้า':'🌅', 'บ่าย':'☀️', 'ดึก':'🌙' };
+    const SHIFT_ICONS = { 'เช้า':'☀️', 'บ่าย':'⛅', 'ดึก':'🌙' };
     function renderTransferLog() {
       const logEl = document.getElementById('transferLog');
       const body  = document.getElementById('transferLogBody');

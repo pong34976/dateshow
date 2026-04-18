@@ -1037,8 +1037,8 @@
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const SHIFTS = [
-      { key: 'เช้า', cls: 'morning', icon: '🌅', slots: 2, bg: 'sh-morning' },
-      { key: 'บ่าย', cls: 'afternoon', icon: '☀️', slots: 2, bg: 'sh-afternoon' },
+      { key: 'เช้า', cls: 'morning', icon: '☀️', slots: 2, bg: 'sh-morning' },
+      { key: 'บ่าย', cls: 'afternoon', icon: '⛅', slots: 2, bg: 'sh-afternoon' },
       { key: 'ดึก', cls: 'night', icon: '🌙', slots: 1, bg: 'sh-night' },
     ];
 
@@ -1246,7 +1246,7 @@
         list.innerHTML = '<div class="pick-none">ไม่พบเวรของคุณที่สามารถแลกได้</div>';
         return;
       }
-      const SHIFT_ICONS = { 'เช้า':'🌅', 'บ่าย':'🌤', 'ดึก':'🌙' };
+      const SHIFT_ICONS = { 'เช้า':'☀️', 'บ่าย':'⛅', 'ดึก':'🌙' };
       myShifts.forEach(({ dk, dateStr: ds, shift, slot }) => {
         const d = new Date(ds);
         const dateLabel = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
