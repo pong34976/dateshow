@@ -9,6 +9,71 @@ function doGet(e) {
     var p = e.parameter;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
+    // ─── บันทึกเวลาที่มีการเปลี่ยนแปลงข้อมูล (Update Tracking) ───
+    var writeActions = ['sell', 'cancelSell', 'sellTransfer', 'cancelSellTransfer', 'completeWork', 'cancelCompleteWork', 'deleteWork', 'cancelSwap', 'swap', 'addStaff'];
+    var isWrite = (p.action && writeActions.indexOf(p.action) !== -1) || p.sheet === 'work' || (!p.action && p.date);
+    if (isWrite) {
+        try {
+            var uSheet = ss.getSheetByName('update') || ss.insertSheet('update');
+            uSheet.getRange('A1').setValue(new Date().getTime());
+        } catch (err) { }
+    }
+
+    // ─── กรณีเช็คเวลาอัปเดตล่าสุด ───
+    if (p.action === 'checkUpdate') {
+        var uSheet = ss.getSheetByName('update');
+        var lastUpdate = uSheet ? uSheet.getRange('A1').getValue() : 0;
+        return ContentService
+            .createTextOutput(JSON.stringify({ status: 'ok', lastUpdate: lastUpdate }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ─── กรณี Sync เฉพาะ Sheet (ทีละ Sheet) ───
+    if (p.action === 'syncSheet') {
+        var sheetName = p.sheetName; // '0', 'swap', 'work', 'วันหยุด', 'sell', 'sellTransfer', 'staff'
+        var targetSheet = (sheetName === '0') ? ss.getSheets()[0] : ss.getSheetByName(sheetName);
+        var result;
+
+        if (sheetName === 'วันหยุด') {
+            result = {};
+            if (targetSheet && targetSheet.getLastRow() > 1) {
+                var hlRows = targetSheet.getDataRange().getValues();
+                for (var hi = 1; hi < hlRows.length; hi++) {
+                    var hRow = hlRows[hi];
+                    var rawDate = hRow[0];
+                    var hlName = hRow[1] ? String(hRow[1]).trim() : '';
+                    if (!rawDate || !hlName) continue;
+
+                    var dateStr = '';
+                    if (rawDate instanceof Date) {
+                        var y = rawDate.getFullYear();
+                        var mo = String(rawDate.getMonth() + 1).padStart(2, '0');
+                        var d = String(rawDate.getDate()).padStart(2, '0');
+                        dateStr = y + '-' + mo + '-' + d;
+                    } else {
+                        var s = String(rawDate).trim();
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+                            dateStr = s;
+                        } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+                            var parts = s.split('/');
+                            dateStr = parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');
+                        }
+                    }
+                    if (dateStr && !result[dateStr]) result[dateStr] = hlName;
+                }
+            }
+        } else {
+            result = [];
+            if (targetSheet && targetSheet.getLastRow() > 0) {
+                result = targetSheet.getDataRange().getDisplayValues();
+            }
+        }
+
+        return ContentService
+            .createTextOutput(JSON.stringify({ status: 'ok', data: result }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
     // ─── กรณี 0: Sync ข้อมูลทั้งหมดกลับไปที่แอป (ดึงข้อมูล) ───
     if (p.action === 'sync') {
         var result = { duties: [], swaps: [], works: [], holidays: {}, sells: [], sellTransfers: [], staffs: [] };

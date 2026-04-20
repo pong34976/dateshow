@@ -528,6 +528,7 @@
         </div>
       </div>
       <div class="nav-group">
+        <button class="today-btn" onclick="stealthSyncFromCloud()" style="background:#e53935; border:none; padding:7px 16px; border-radius:20px; color:#fff; font-family:'Sarabun',sans-serif; font-size:.88rem; cursor:pointer;" title="ดึงข้อมูลใหม่">🔄 Refresh</button>
         <button class="nav-btn" id="btnPrev">&#8249;</button>
         <button class="nav-btn" id="btnNext">&#8250;</button>
         <button class="today-btn" id="btnToday">เดือนนี้</button>
@@ -842,13 +843,153 @@
       }
     }
 
-    window.addEventListener('focus', reloadData);
+    const GS_URL = 'https://script.google.com/macros/s/AKfycbxwkcBPudJEr_FfHrLvaEOrPjzdu3wC9G3HUHOue_cc--zLoPGVcQNDMS8Tgrv1Q3lx/exec';
+
+    async function stealthSyncFromCloud(isAuto = false) {
+      if(!isAuto && !confirm('ยืนยันดึงข้อมูลล่าสุดจาก Google Sheets?')) return;
+      
+      const btn = document.querySelector('button[onclick="stealthSyncFromCloud()"]');
+      let oldTxt = btn ? btn.innerHTML : '🔄 Refresh';
+
+      try {
+        const checkRes = await fetch(GS_URL + '?action=checkUpdate&t=' + Date.now());
+        const checkJson = await checkRes.json();
+        
+        if (checkJson.lastUpdate === undefined) {
+          if(!isAuto) alert('API ล่าสุดยังไม่ถูก Deploy กรุณาไปที่ Apps Script และกด Deploy -> New version ครับ');
+          console.error('API ล่าสุดยังไม่ถูก Deploy กรุณาไปที่ Apps Script และกด Deploy -> New version ครับ');
+          return;
+        }
+
+        const serverUpdate = checkJson.lastUpdate || 0;
+        const localUpdate = localStorage.getItem('last_update_time_v1') || 0;
+
+        if (isAuto && String(serverUpdate) === String(localUpdate)) return; // Already up to date
+        
+        const badge = document.getElementById('nameBadge');
+        let oldBadge = '';
+        
+        if(btn) {
+          btn.innerHTML = '🔄 10%...';
+          btn.style.opacity = '0.8';
+          btn.disabled = true;
+        } else if(badge) {
+          oldBadge = badge.innerHTML;
+          badge.innerHTML = '🔄 Sync...';
+        }
+
+        const sheets = [
+          { name: '0', pct: '30%' },
+          { name: 'swap', pct: '45%' },
+          { name: 'sell', pct: '60%' },
+          { name: 'sellTransfer', pct: '75%' },
+          { name: 'staff', pct: '85%' },
+          { name: 'วันหยุด', pct: '95%' }
+        ];
+
+        let fetchedData = {};
+        for (let s of sheets) {
+          if (btn) btn.innerHTML = `🔄 ${s.pct}`;
+          const res = await fetch(GS_URL + `?action=syncSheet&sheetName=${s.name}&t=` + Date.now());
+          const json = await res.json();
+          if (json.status === 'ok') fetchedData[s.name] = json.data;
+        }
+
+        // Process Duties
+        const dRows = fetchedData['0'];
+        if (dRows && dRows.length > 1) {
+          const dMap = {};
+          dRows.slice(1).forEach(r => {
+            if (r.length >= 5 && r[1]) dMap[dutyKey(r[1], r[2] || '', r[3] || '')] = r[4];
+          });
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(dMap));
+        }
+
+        // Process Swaps
+        const sRows = fetchedData['swap'];
+        if (sRows && sRows.length > 1) {
+          const sMap = {};
+          sRows.slice(1).forEach(r => {
+            if (r.length >= 6 && r[1]) {
+              sMap[dutyKey(r[1], r[2] || '', r[3] || '')] = { original: r[4] || '', requester: r[5] || '', date: r[1], shift: r[2] || '', slot: r[3] || '', savedAt: r[0] || '' };
+            }
+          });
+          localStorage.setItem('swapMap_v1', JSON.stringify(sMap));
+        }
+
+        // Process Staffs
+        const stfRows = fetchedData['staff'];
+        if (stfRows && stfRows.length > 1) {
+          const stfMap = {};
+          stfRows.slice(1).forEach(r => {
+            if (r.length >= 2 && r[1]) stfMap[r[1]] = { name: r[1], color: r[2] || '#cccccc' };
+          });
+          if (Object.keys(stfMap).length > 0) localStorage.setItem('staffMap_v1', JSON.stringify(stfMap));
+        }
+
+        // Process Holidays
+        const hData = fetchedData['วันหยุด'];
+        if (hData && typeof hData === 'object' && Object.keys(hData).length > 0) {
+          try {
+            const oldHData = JSON.parse(localStorage.getItem('holidayMap_v1') || '{"data":{}}');
+            const finalHData = { ...oldHData.data, ...hData };
+            localStorage.setItem('holidayMap_v1', JSON.stringify({ ts: Date.now(), data: finalHData }));
+          } catch(e){}
+        }
+
+        // Process Sells
+        const slRows = fetchedData['sell'];
+        if (slRows && slRows.length > 1) {
+          const newSell = {};
+          slRows.slice(1).forEach(r => {
+            if (r.length >= 5 && r[1]) newSell[dutyKey(r[1], r[2] || '', r[3] || '')] = { date: r[1], shift: r[2] || '', slot: r[3] || '', seller: r[4] || '', savedAt: r[0] || '' };
+          });
+          localStorage.setItem('sellMap_v1', JSON.stringify(newSell));
+        }
+
+        // Process SellTransfers 
+        const stRows = fetchedData['sellTransfer'];
+        if (stRows && stRows.length > 1) {
+          const newST = {};
+          stRows.slice(1).forEach(r => {
+            if (r.length >= 6 && r[1]) newST[dutyKey(r[1], r[2] || '', r[3] || '')] = { original: r[4] || '', buyer: r[5] || '', date: r[1], shift: r[2] || '', slot: r[3] || '', savedAt: r[0] || '' };
+          });
+          localStorage.setItem('sellTransferMap_v1', JSON.stringify(newST));
+        }
+
+        localStorage.setItem('last_update_time_v1', serverUpdate);
+        
+        reloadData();
+        
+        if(btn) {
+          btn.innerHTML = oldTxt;
+          btn.style.opacity = '1';
+          btn.disabled = false;
+        } else if(badge && oldBadge) {
+          badge.innerHTML = oldBadge;
+        }
+      } catch(err) {
+        if(!isAuto) alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+        else console.error('Stealth sync failed:', err);
+        if(btn) {
+          btn.innerHTML = oldTxt;
+          btn.style.opacity = '1';
+          btn.disabled = false;
+        }
+      }
+    }
+
+    window.addEventListener('focus', () => { reloadData(); stealthSyncFromCloud(true); });
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') reloadData();
+      if (document.visibilityState === 'visible') { reloadData(); stealthSyncFromCloud(true); }
     });
     window.addEventListener('pageshow', (e) => {
-      if (e.persisted) reloadData();
+      if (e.persisted) { reloadData(); stealthSyncFromCloud(true); }
     });
+    
+    // Initial fetch on load
+    stealthSyncFromCloud(true);
+
   </script>
 </body>
 

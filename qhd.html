@@ -369,116 +369,276 @@
 
     /* ─── Modal ─── */
     .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; transition: .3s; z-index: 999;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: .3s;
+      z-index: 999;
     }
-    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     .modal {
-      background: var(--bg); width: 90%; max-width: 400px;
-      border-radius: 20px; padding: 24px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-      transform: translateY(20px); transition: .3s;
+      background: var(--bg);
+      width: 90%;
+      max-width: 400px;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      transform: translateY(20px);
+      transition: .3s;
       border: 1px solid var(--border);
     }
-    .modal-overlay.open .modal { transform: translateY(0); }
-    .modal-title { font-size: 1.25rem; font-weight: 600; color: var(--text); margin-bottom: 5px; }
-    .modal-sub { color: var(--sub); font-size: .9rem; margin-bottom: 20px; }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0);
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+
+    .modal-sub {
+      color: var(--sub);
+      font-size: .9rem;
+      margin-bottom: 20px;
+    }
+
     .modal-close {
-      width: 100%; padding: 12px; margin-top: 15px;
-      background: transparent; border: 1px solid var(--border);
-      color: var(--text); border-radius: 12px; font-weight: 500;
-      cursor: pointer; font-family: 'Sarabun', sans-serif;
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Sarabun', sans-serif;
       transition: background 0.2s;
     }
-    .modal-close:hover { background: var(--hover); }
+
+    .modal-close:hover {
+      background: var(--hover);
+    }
 
     /* ─── Vector Progress ─── */
     .progress-container {
-      width: 100%; max-width: 1100px; margin: 20px auto; padding: 24px;
-      background: var(--cell); border-radius: var(--radius);
-      box-shadow: var(--shadow); border: 1px solid var(--border);
+      width: 100%;
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 24px;
+      background: var(--cell);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
     }
+
     .progress-title {
-      font-weight: 700; color: var(--text); margin-bottom: 12px;
-      display: flex; justify-content: space-between; font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.1rem;
     }
-    #progressText { color: #16a34a; font-size: 1.25rem; }
-    
+
+    #progressText {
+      color: #16a34a;
+      font-size: 1.25rem;
+    }
+
     .vector-bar {
-      width: 100%; height: 32px; background: #e2e8f0;
-      border-radius: 4px; position: relative; overflow: hidden;
+      width: 100%;
+      height: 32px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
       clip-path: polygon(0% 0%, 98% 0%, 100% 50%, 98% 100%, 0% 100%);
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
     }
+
     .vector-fill {
-      height: 100%; background: linear-gradient(90deg, #4ade80 0%, #16a34a 100%);
-      width: 0%; transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80 0%, #16a34a 100%);
+      width: 0%;
+      transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
       position: relative;
     }
+
     .vector-fill::after {
-      content: ''; position: absolute; top:0; right:0; bottom:0; left: 0;
-      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 100%);
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 100%);
     }
 
     /* ─── Timeline ─── */
     .timeline-container {
-      width: 100%; max-width: 1100px; margin: 0 auto 20px; padding: 24px;
-      background: var(--cell); border-radius: var(--radius);
-      box-shadow: var(--shadow); border: 1px solid var(--border);
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto 20px;
+      padding: 24px;
+      background: var(--cell);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
     }
+
     .tl-header {
-      font-size: 1.15rem; font-weight: 700; color: var(--text);
-      margin-bottom: 24px; display: flex; align-items: center; gap: 8px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+
     .tl-list {
-      display: flex; flex-direction: column; gap: 16px; position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
     }
+
     .tl-list::after {
-      content: ''; position: absolute; left: 16px; top: 20px; bottom: 20px;
-      width: 2px; background: var(--border); z-index: 1;
+      content: '';
+      position: absolute;
+      left: 16px;
+      top: 20px;
+      bottom: 20px;
+      width: 2px;
+      background: var(--border);
+      z-index: 1;
     }
+
     .tl-row {
-      display: flex; gap: 16px; position: relative; z-index: 2;
+      display: flex;
+      gap: 16px;
+      position: relative;
+      z-index: 2;
     }
+
     .tl-dot-wrap {
-      width: 34px; flex-shrink: 0; display: flex; justify-content: center; padding-top: 18px;
+      width: 34px;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      padding-top: 18px;
     }
+
     .tl-dot {
-      width: 14px; height: 14px; border-radius: 50%;
-      background: var(--bg); border: 3px solid var(--accent);
-      position: relative; z-index: 2; transition: all 0.3s;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 3px solid var(--accent);
+      position: relative;
+      z-index: 2;
+      transition: all 0.3s;
     }
+
     .tl-row.completed .tl-dot {
-      border-color: #16a34a; background: #16a34a;
+      border-color: #16a34a;
+      background: #16a34a;
       box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
     }
+
     .tl-card {
-      flex: 1; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 16px; padding: 18px 20px; position: relative;
-      overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    .tl-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+
+    .tl-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+    }
+
     .tl-row.completed .tl-card {
-      background: #f0fdf4; border-color: #bbf7d0;
+      background: #f0fdf4;
+      border-color: #bbf7d0;
     }
-    .tl-date { font-size: 0.82rem; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
-    .tl-row.completed .tl-date { color: #16a34a; }
-    .tl-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-    .tl-row.completed .tl-title { color: #15803d; text-decoration: line-through; opacity: 0.8; }
+
+    .tl-date {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .tl-row.completed .tl-date {
+      color: #16a34a;
+    }
+
+    .tl-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .tl-row.completed .tl-title {
+      color: #15803d;
+      text-decoration: line-through;
+      opacity: 0.8;
+    }
+
     .tl-time {
-      font-size: 0.8rem; background: rgba(0,0,0,0.04);
-      padding: 3px 8px; border-radius: 10px; font-weight: 600; color: var(--sub);
+      font-size: 0.8rem;
+      background: rgba(0, 0, 0, 0.04);
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: var(--sub);
     }
-    .tl-row.completed .tl-time { background: rgba(22,163,74,0.1); color: #16a34a; }
+
+    .tl-row.completed .tl-time {
+      background: rgba(22, 163, 74, 0.1);
+      color: #16a34a;
+    }
+
     .tl-watermark {
-      position: absolute; right: 10px; bottom: -10px;
-      font-size: 5.5rem; color: #16a34a; opacity: 0;
-      pointer-events: none; transform: rotate(-15deg);
-      user-select: none; transition: opacity 0.3s;
+      position: absolute;
+      right: 10px;
+      bottom: -10px;
+      font-size: 5.5rem;
+      color: #16a34a;
+      opacity: 0;
+      pointer-events: none;
+      transform: rotate(-15deg);
+      user-select: none;
+      transition: opacity 0.3s;
     }
-    .tl-row.completed .tl-watermark { opacity: 0.08; }
+
+    .tl-row.completed .tl-watermark {
+      opacity: 0.08;
+    }
   </style>
 </head>
 
@@ -540,19 +700,20 @@
     <div class="modal">
       <div class="modal-title" id="wmTitle">รายละเอียดงาน</div>
       <div class="modal-sub" id="wmDate"></div>
-      
+
       <div style="margin-bottom: 15px;">
         <div style="color:var(--text); font-size:1.15rem; font-weight:600; margin-bottom:8px;" id="wmTask"></div>
-        <div style="color:var(--accent); font-size:0.95rem; font-weight:500; background:rgba(21,101,192,0.1); padding:6px 12px; border-radius:8px; display:inline-block;">
+        <div
+          style="color:var(--accent); font-size:0.95rem; font-weight:500; background:rgba(21,101,192,0.1); padding:6px 12px; border-radius:8px; display:inline-block;">
           ⏰ <span id="wmTime"></span>
         </div>
       </div>
-      
+
       <div style="color:var(--text); font-size:0.95rem; margin-bottom: 8px; font-weight:500;">ผู้ร่วมงาน:</div>
       <div id="wmPeople" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 20px;"></div>
-      
+
       <div id="wmAction" style="margin-bottom: 15px;"></div>
-      
+
       <button class="modal-close" onclick="closeWorkModal()">ปิด</button>
     </div>
   </div>
@@ -592,7 +753,7 @@
       for (let i = 1; i <= total - filled; i++) addCell(i, true, new Date(year, month + 1, i));
 
       document.getElementById('calTitle').innerHTML = `${THAI_MONTHS[month]} <span>${year + 543}</span>`;
-      
+
       // Update vector progress & timeline
       updateVectorProgress(year, month);
       buildTimeline(year, month);
@@ -620,7 +781,7 @@
       cell.appendChild(num);
 
       const dateStr = fmtDate(dateObj);
-      const entries = (workMap[dateStr] || []).slice().sort((a,b) => (a.start || "").localeCompare(b.start || ""));
+      const entries = (workMap[dateStr] || []).slice().sort((a, b) => (a.start || "").localeCompare(b.start || ""));
 
       const entriesDiv = document.createElement('div');
       entriesDiv.className = 'work-entries';
@@ -635,21 +796,21 @@
         } else {
           chip.style.background = CHIP_COLORS[idx % CHIP_COLORS.length];
         }
-        
+
         const peopleHtml = (e.people && e.people.length)
           ? `<div class="wc-people">${e.people.map(p => `<span class="wc-avatar">${p}</span>`).join('')}</div>`
           : '';
-        
-        const taskNameHtml = e.status === 'สำเร็จ' 
-          ? `<span class="wc-task" style="text-decoration:line-through; opacity:0.9;">✅ ${e.task}</span>` 
+
+        const taskNameHtml = e.status === 'สำเร็จ'
+          ? `<span class="wc-task" style="text-decoration:line-through; opacity:0.9;">✅ ${e.task}</span>`
           : `<span class="wc-task">${e.task}</span>`;
-          
+
         chip.innerHTML = `<span class="wc-time">⏰ ${e.start}–${e.end}</span>${taskNameHtml}${peopleHtml}`;
-        
+
         // ทำให้คลิกได้
         chip.style.cursor = 'pointer';
         chip.onclick = () => showWorkDetails(e);
-        
+
         entriesDiv.appendChild(chip);
       });
 
@@ -675,33 +836,33 @@
     function buildTimeline(year, month) {
       const tlList = document.getElementById('tlList');
       tlList.innerHTML = '';
-      
+
       const allTasks = [];
-      const prefix = `${year}-${String(month+1).padStart(2, '0')}`;
-      
+      const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+
       Object.keys(workMap).forEach(dateStr => {
         if (dateStr.startsWith(prefix)) {
           workMap[dateStr].forEach(t => allTasks.push(t));
         }
       });
-      
+
       if (allTasks.length === 0) {
         tlList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--sub); font-size:0.95rem;">ยังไม่มีงานในเดือนนี้ ขีดเส้นใต้ความว่างเปล่า... 😅</div>';
         return;
       }
-      
-      allTasks.sort((a,b) => {
+
+      allTasks.sort((a, b) => {
         if (a.dateStr !== b.dateStr) return a.dateStr.localeCompare(b.dateStr);
-        return (a.start||'').localeCompare(b.start||'');
+        return (a.start || '').localeCompare(b.start || '');
       });
-      
+
       allTasks.forEach(t => {
-        const [y,m,d] = t.dateStr.split('-');
-        const thDate = `${parseInt(d)} ${THAI_MONTHS[parseInt(m)-1]} ${parseInt(y)+543}`;
+        const [y, m, d] = t.dateStr.split('-');
+        const thDate = `${parseInt(d)} ${THAI_MONTHS[parseInt(m) - 1]} ${parseInt(y) + 543}`;
         const isCompleted = t.status === 'สำเร็จ';
-        const wmPeopleHtml = (t.people && t.people.length) 
-           ? t.people.map(p => `👤 ${p}`).join(', ') 
-           : '-';
+        const wmPeopleHtml = (t.people && t.people.length)
+          ? t.people.map(p => `👤 ${p}`).join(', ')
+          : '-';
 
         const row = document.createElement('div');
         row.className = 'tl-row' + (isCompleted ? ' completed' : '');
@@ -740,14 +901,14 @@
 
     // Modal Logic
     function showWorkDetails(t) {
-      if(!t) return;
-      const [y,m,d] = t.dateStr.split('-');
-      const thDate = `${parseInt(d)} ${THAI_MONTHS[parseInt(m)-1]} ${parseInt(y)+543}`;
-      
+      if (!t) return;
+      const [y, m, d] = t.dateStr.split('-');
+      const thDate = `${parseInt(d)} ${THAI_MONTHS[parseInt(m) - 1]} ${parseInt(y) + 543}`;
+
       document.getElementById('wmDate').textContent = '📅 ' + thDate;
       document.getElementById('wmTask').textContent = t.task;
       document.getElementById('wmTime').textContent = `${t.start} – ${t.end}`;
-      
+
       const pBox = document.getElementById('wmPeople');
       pBox.innerHTML = '';
       if (t.people && t.people.length > 0) {
@@ -766,7 +927,7 @@
         pBox.textContent = '- ไม่มี -';
         pBox.style.color = 'var(--sub)';
       }
-      
+
       const actionBox = document.getElementById('wmAction');
       if (t.status === 'สำเร็จ') {
         actionBox.innerHTML = `
@@ -776,48 +937,48 @@
       } else {
         actionBox.innerHTML = `<button style="width:100%; padding:14px; background:linear-gradient(135deg, #22c55e, #16a34a); color:#fff; font-size:1.15rem; font-weight:700; border:none; border-radius:12px; cursor:pointer; font-family:'Sarabun',sans-serif; box-shadow:0 4px 15px rgba(22,163,74,0.4); text-shadow:0px 1px 2px rgba(0,0,0,0.2); transition:transform 0.2s;" onclick="markWorkCompleted('${t.dateStr}', '${t.start}', '${t.task}')">✅ ติ๊กให้งานสำเร็จ!</button>`;
       }
-      
+
       document.getElementById('workModal').classList.add('open');
     }
-    
+
     async function markWorkCompleted(date, start, task) {
-      if(!confirm('ยืนยันบันทึกว่างานนี้ "สำเร็จ" แล้วใช่หรือไม่? 🚀')) return;
-      
+      if (!confirm('ยืนยันบันทึกว่างานนี้ "สำเร็จ" แล้วใช่หรือไม่? 🚀')) return;
+
       // อัปเดตฝั่งเว็บทันที
       const arr = workMap[date] || [];
       const item = arr.find(x => x.start === start && x.task === task);
-      if(item) {
+      if (item) {
         item.status = 'สำเร็จ';
         localStorage.setItem(STORAGE_KEY, JSON.stringify(workMap));
       }
-      
+
       closeWorkModal();
       buildGrid(current.getFullYear(), current.getMonth());
-      
+
       // ส่งไป Sheet เบื้องหลัง
       try {
         const p = { action: 'completeWork', date, start, task };
         await fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' });
-      } catch(e) { console.log(e); }
+      } catch (e) { console.log(e); }
     }
 
     async function cancelWorkCompleted(date, start, task) {
-      if(!confirm('ต้องการยกเลิกสถานะ "สำเร็จ" ของงานนี้ใช่หรือไม่? ↩️')) return;
-      
+      if (!confirm('ต้องการยกเลิกสถานะ "สำเร็จ" ของงานนี้ใช่หรือไม่? ↩️')) return;
+
       const arr = workMap[date] || [];
       const item = arr.find(x => x.start === start && x.task === task);
-      if(item) {
+      if (item) {
         delete item.status;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(workMap));
       }
-      
+
       closeWorkModal();
       buildGrid(current.getFullYear(), current.getMonth());
-      
+
       try {
         const p = { action: 'cancelCompleteWork', date, start, task };
         await fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' });
-      } catch(e) { console.log(e); }
+      } catch (e) { console.log(e); }
     }
 
     function closeWorkModal() {
@@ -828,33 +989,63 @@
       if (e.target === e.currentTarget) closeWorkModal();
     });
 
-    // Auto-refresh when coming back from work.html
-    window.addEventListener('focus', () => {
+    // Auto-refresh when coming back
+    function reloadData() {
       workMap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
       buildGrid(current.getFullYear(), current.getMonth());
+    }
+
+    window.addEventListener('focus', () => {
+      reloadData();
+      syncFromCloud(true);
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') { reloadData(); syncFromCloud(true); }
+    });
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) { reloadData(); syncFromCloud(true); }
     });
 
     const AUTO_SYNC_MINUTES = 30;
 
     async function syncFromCloud(isAuto = false) {
-      if(!isAuto && !confirm('ยืนยันดึงข้อมูลล่าสุดจาก Google Sheets? (จะโหลดมาทับข้อมูลในเครื่อง)')) return;
-      
+      if (!isAuto && !confirm('ยืนยันดึงข้อมูลล่าสุดจาก Google Sheets?')) return;
+
       const btn = document.querySelector('button[onclick="syncFromCloud()"]');
-      let oldTxt = '';
-      if(btn) {
-        oldTxt = btn.innerHTML;
-        btn.innerHTML = '⏳ โหลด...';
-        btn.style.opacity = '0.7';
-        btn.disabled = true;
-      }
+      let oldTxt = btn ? btn.innerHTML : '🔄 Refresh';
 
       try {
-        const res = await fetch(GS_URL + '?action=sync&t=' + Date.now());
+        // 1. Check Update Time
+        const checkRes = await fetch(GS_URL + '?action=checkUpdate&t=' + Date.now());
+        const checkJson = await checkRes.json();
+
+        if (checkJson.lastUpdate === undefined) {
+          throw new Error('API ล่าสุดยังไม่ถูก Deploy กรุณาไปที่ Apps Script และกด Deploy -> New version ครับ');
+        }
+
+        const serverUpdate = checkJson.lastUpdate || 0;
+        const localUpdate = localStorage.getItem('last_update_work_v1') || 0;
+
+        // Skip if auto-sync and already up to date
+        if (isAuto && String(serverUpdate) === String(localUpdate)) {
+          return;
+        }
+
+        if (btn) {
+          btn.innerHTML = '🔄 10%...';
+          btn.style.opacity = '0.8';
+          btn.disabled = true;
+        }
+
+        // Fetch specifically work sheet
+        if (btn) btn.innerHTML = '🔄 50%...';
+        const res = await fetch(GS_URL + '?action=syncSheet&sheetName=work&t=' + Date.now());
         const json = await res.json();
-        
+
         if (json.status === 'ok') {
+          if (btn) btn.innerHTML = '🔄 90%...';
           const wMap = {};
-          const wRows = json.data.works;
+          const wRows = json.data;
           if (wRows && wRows.length > 1) {
             wRows.slice(1).forEach((r, idx) => {
               if (r.length >= 6 && r[1]) {
@@ -874,11 +1065,14 @@
             });
           }
           localStorage.setItem(STORAGE_KEY, JSON.stringify(wMap));
-          workMap = wMap; // Update global
-          
+          workMap = wMap;
+
+          // Update successful timestamp
+          localStorage.setItem('last_update_work_v1', serverUpdate);
+
           buildGrid(current.getFullYear(), current.getMonth());
-          
-          if(btn) {
+
+          if (btn) {
             btn.innerHTML = oldTxt;
             btn.style.opacity = '1';
             btn.disabled = false;
@@ -886,10 +1080,10 @@
         } else {
           throw new Error('Invalid status from server');
         }
-      } catch(err) {
-        if(!isAuto) alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+      } catch (err) {
+        if (!isAuto) console.log('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
         else console.error('Auto sync failed:', err);
-        if(btn) {
+        if (btn) {
           btn.innerHTML = oldTxt;
           btn.style.opacity = '1';
           btn.disabled = false;
