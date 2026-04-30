@@ -1106,26 +1106,36 @@
           btn.disabled = true;
         }
 
-        // Fetch sheet by sheet (stealth percentage)
-        const sheets = [
-          { name: '0', pct: '30%' },
-          { name: 'swap', pct: '45%' },
-          { name: 'sell', pct: '60%' },
-          { name: 'sellTransfer', pct: '75%' },
-          { name: 'staff', pct: '85%' },
-          { name: 'วันหยุด', pct: '95%' }
+        // Fetch sheets concurrently to speed up
+        const sheetsToFetch = [
+          { name: '0', pctStep: 20 },
+          { name: 'swap', pctStep: 15 },
+          { name: 'sell', pctStep: 15 },
+          { name: 'sellTransfer', pctStep: 15 },
+          { name: 'staff', pctStep: 10 },
+          { name: 'วันหยุด', pctStep: 10 }
         ];
 
         let fetchedData = {};
+        let currentPct = 10;
 
-        for (let s of sheets) {
-          if (btn) btn.innerHTML = `🔄 ${s.pct}`;
-          const res = await fetch(GS_URL + `?action=syncSheet&sheetName=${s.name}&t=` + Date.now());
-          const json = await res.json();
-          if (json.status === 'ok') {
-            fetchedData[s.name] = json.data;
+        const fetchPromises = sheetsToFetch.map(async (s) => {
+          try {
+            const res = await fetch(GS_URL + `?action=syncSheet&sheetName=${s.name}&t=` + Date.now());
+            const json = await res.json();
+            if (json.status === 'ok') {
+              fetchedData[s.name] = json.data;
+            }
+          } catch (e) {
+            console.warn("Sync failed for sheet:", s.name, e);
+          } finally {
+            currentPct += s.pctStep;
+            if (currentPct > 95) currentPct = 95;
+            if (btn) btn.innerHTML = `🔄 ${currentPct}%`;
           }
-        }
+        });
+
+        await Promise.all(fetchPromises);
 
         // 1. Process Duties 
         const dRows = fetchedData['0'];
