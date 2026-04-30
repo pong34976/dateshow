@@ -602,6 +602,24 @@
       margin-right: 2px;
     }
 
+    .is-dimmed {
+      opacity: 0.3;
+      filter: grayscale(100%);
+      pointer-events: none;
+    }
+
+    .is-highlight {
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
     .new-name {
       font-size: .85rem;
     }
@@ -644,56 +662,7 @@
       color: #fff;
     }
 
-    /* ── Pick-back overlay (step 3) ── */
-    .pick-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.72);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1100;
-      backdrop-filter: blur(7px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s;
-    }
-    .pick-overlay.open { opacity:1; pointer-events:all; }
-    .pick-box {
-      background: var(--modal-bg, #1a1530);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 24px 26px;
-      width: 92%;
-      max-width: 400px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.7);
-      transform: translateY(18px) scale(.97);
-      transition: transform .25s ease;
-    }
-    .pick-overlay.open .pick-box { transform: translateY(0) scale(1); }
-    .pick-title { font-size:.95rem; font-weight:700; color:var(--hdr-txt); margin-bottom:4px; }
-    .pick-sub   { font-size:.8rem; color:var(--day-lbl); margin-bottom:16px; line-height:1.5; }
-    .pick-list  { display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; }
-    .pick-chip {
-      display:flex; align-items:center; gap:10px;
-      padding:10px 14px; border-radius:12px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.05);
-      cursor:pointer; transition:background .15s, border-color .15s;
-      font-size:.88rem; color:var(--hdr-txt);
-    }
-    .pick-chip:hover { background:rgba(41,121,255,.18); border-color:var(--accent); }
-    .pick-chip .pc-date { font-weight:700; flex:1; }
-    .pick-chip .pc-shift { font-size:.78rem; color:var(--day-lbl); }
-    .pick-none { color:var(--day-lbl); font-size:.85rem; text-align:center; padding:14px 0; }
-    .pick-cancel-btn {
-      margin-top:14px; width:100%; padding:10px;
-      border-radius:12px; border:1px solid var(--border);
-      background:rgba(255,255,255,.06); color:var(--day-lbl);
-      font-family:'Sarabun',sans-serif; font-size:.9rem;
-      cursor:pointer; transition:background .2s;
-    }
-    .pick-cancel-btn:hover { background:rgba(255,255,255,.12); }
+    /* ── Pick-back overlay removed ── */
 
     /* ── Confirm Modal ── */
     .modal-overlay {
@@ -942,27 +911,17 @@
   <!-- Step indicator -->
   <div class="steps">
     <div class="step-dot active" id="sdot1">1</div>
-    <div class="step-label">เลือกผู้ขอแลก</div>
+    <div class="step-label">เลือกเวรที่จะแลก (ของคุณ)</div>
     <div class="step-line"></div>
     <div class="step-dot" id="sdot2">2</div>
-    <div class="step-label">เลือกเวรที่ต้องการแลก</div>
+    <div class="step-label">เลือกเวรที่ต้องการสลับ (เป้าหมาย)</div>
   </div>
 
-  <!-- Step 1: requester -->
-  <div id="step1">
-    <div class="step1-title">🔄 ใครต้องการแลกเวร?</div>
-    <div class="step1-sub">เลือกชื่อผู้ขอแลกเวร</div>
-    <div class="req-grid" id="reqGrid">
-      <!-- สร้างจาก JS -->
-    </div>
-  </div>
-
-  <!-- Step 2: calendar -->
-  <div id="step2">
-    <div class="requester-banner" id="requesterBanner">
-      <span>🔄 ผู้ขอแลกเวร: <strong id="requesterLabel">–</strong></span>
-      <span style="color:var(--day-lbl); font-size:.82rem;">คลิกชื่อในปฏิทินเพื่อแลกเวร</span>
-      <button class="req-change-btn" onclick="changeRequester()">เปลี่ยน</button>
+  <!-- Calendar area -->
+  <div id="step2" style="display:block;">
+    <div class="requester-banner" id="requesterBanner" style="display:none;">
+      <span>🔄 นำเวร: <strong id="sourceLabel">–</strong> ไปแลกกับ...</span>
+      <button class="req-change-btn" onclick="resetSwapState()">ยกเลิก / เริ่มใหม่</button>
     </div>
     <div class="calendar">
       <div class="cal-header">
@@ -1005,15 +964,7 @@
     </table>
   </div>
 
-  <!-- Step 3: pick-back overlay -->
-  <div class="pick-overlay" id="pickOverlay">
-    <div class="pick-box">
-      <div class="pick-title">🔄 เลือกเวรของ <span id="pickRequesterName">–</span> ที่จะให้แลก</div>
-      <div class="pick-sub" id="pickSub">–</div>
-      <div class="pick-list" id="pickList"></div>
-      <button class="pick-cancel-btn" onclick="closePickOverlay()">ยกเลิก</button>
-    </div>
-  </div>
+  <!-- Step 3: pick-back overlay removed -->
 
   <!-- Confirm modal -->
   <div class="modal-overlay" id="modalOverlay">
@@ -1060,7 +1011,7 @@
     };
     let staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
 
-    let requester = '';     // ชื่อผู้ขอแลก (ไทย)
+    let swapState = { step: 1, source: null, target: null };
     let pendingSwap = null; // ข้อมูลที่รอยืนยัน
 
     /* ─── helpers ─── */
@@ -1080,44 +1031,14 @@
       setTimeout(() => t.classList.remove('show'), 2800);
     }
 
-    function renderStaffButtons() {
-      const grid = document.getElementById('reqGrid');
-      if (!grid) return;
-      grid.innerHTML = '';
-      Object.keys(staffMap).forEach(k => {
-        const st = staffMap[k];
-        const btn = document.createElement('button');
-        btn.className = 'req-btn';
-        btn.style.color = st.color;
-        btn.style.borderColor = st.color;
-        btn.innerHTML = `<span class="req-icon">👤</span>${st.name}`;
-        btn.onclick = () => selectRequester(st.name);
-        grid.appendChild(btn);
-      });
-    }
-
-    /* ─── Step 1: pick requester ─── */
-    function selectRequester(name) {
-      requester = name;
-      document.getElementById('sdot1').classList.remove('active');
-      document.getElementById('sdot1').classList.add('done');
-      document.getElementById('sdot1').textContent = '✓';
-      document.getElementById('sdot2').classList.add('active');
-      document.getElementById('requesterLabel').textContent = name;
-      document.getElementById('step1').style.display = 'none';
-      document.getElementById('step2').style.display = 'block';
-      buildGrid(current.getFullYear(), current.getMonth());
-      renderLog();
-    }
-
-    function changeRequester() {
-      requester = '';
+    function resetSwapState() {
+      swapState = { step: 1, source: null, target: null };
       document.getElementById('sdot1').classList.add('active');
       document.getElementById('sdot1').classList.remove('done');
       document.getElementById('sdot1').textContent = '1';
       document.getElementById('sdot2').classList.remove('active');
-      document.getElementById('step1').style.display = 'block';
-      document.getElementById('step2').style.display = 'none';
+      document.getElementById('requesterBanner').style.display = 'none';
+      buildGrid(current.getFullYear(), current.getMonth());
     }
 
     /* ─── Calendar ─── */
@@ -1182,6 +1103,7 @@
           if (swapEntry) {
             // Already swapped – show old (strikethrough) + new
             chip.classList.add('is-swapped');
+            chip.classList.add('is-dimmed');
             chip.innerHTML = `
               <span class="chip-icon">${icon}</span>
               <span class="chip-name">
@@ -1192,17 +1114,50 @@
               <span class="swap-badge">แลก</span>
             `;
           } else {
-            // Normal chip – clickable to swap
+            // Normal chip
             chip.innerHTML = `<span class="chip-icon">${icon}</span><span class="chip-name">${name}</span>`;
             if (!otherMonth) {
-              chip.addEventListener('click', () => {
-                // Block self-swap
-                if (name === requester) {
-                  showToast('⚠️ ไม่สามารถแลกเวรกับตัวเองได้', true);
-                  return;
+              if (swapState.step === 1) {
+                chip.addEventListener('click', () => {
+                  swapState.source = { dk, name, dateStr, shift: key, slot: s, dateObj, icon };
+                  swapState.step = 2;
+                  
+                  document.getElementById('sdot1').classList.remove('active');
+                  document.getElementById('sdot1').classList.add('done');
+                  document.getElementById('sdot1').textContent = '✓';
+                  document.getElementById('sdot2').classList.add('active');
+                  
+                  const d = new Date(dateStr);
+                  const thaiDate = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]}`;
+                  document.getElementById('sourceLabel').textContent = `${name} (${key} ${thaiDate})`;
+                  document.getElementById('requesterBanner').style.display = 'flex';
+                  
+                  buildGrid(current.getFullYear(), current.getMonth());
+                });
+              } else if (swapState.step === 2) {
+                const isSourceRobinson = swapState.source.shift === 'โรบินสัน';
+                const isTargetRobinson = key === 'โรบินสัน';
+                const isSelf = name === swapState.source.name;
+                
+                let isValid = true;
+                if (isSelf) isValid = false;
+                if (isSourceRobinson && !isTargetRobinson) isValid = false;
+                if (!isSourceRobinson && isTargetRobinson) isValid = false;
+                
+                if (!isValid) {
+                  chip.classList.add('is-dimmed');
+                } else {
+                  chip.classList.add('is-highlight');
+                  chip.addEventListener('click', () => {
+                    swapState.target = { dk, name, dateStr, shift: key, slot: s, dateObj, icon };
+                    openConfirmModal();
+                  });
                 }
-                openPickBack(dateStr, key, s, name, dateObj);
-              });
+              }
+            } else {
+              if (swapState.step === 2) {
+                chip.classList.add('is-dimmed');
+              }
             }
           }
           shiftsDiv.appendChild(chip);
@@ -1213,102 +1168,44 @@
       grid.appendChild(cell);
     }
 
-    /* ─── Step 3: Pick-back (requester selects their own shift to give) ─── */
-    let targetSwap = null; // the shift requester wants to get
-
-    function openPickBack(dateStr, shift, slot, originalName, dateObj) {
-      targetSwap = { dateStr, shift, slot, originalName, dateObj };
-      const shiftDef = SHIFTS.find(s => s.key === shift);
-      const slotTxt  = shiftDef.slots > 1 ? ` ช่อง ${slot}` : '';
-      const tDate    = `${dateObj.getDate()} ${THAI_MONTHS[dateObj.getMonth()]} ${dateObj.getFullYear()+543}`;
-      document.getElementById('pickRequesterName').textContent = requester;
-      document.getElementById('pickSub').innerHTML =
-        `ต้องการแลกเวร <strong>${originalName}</strong> · ${shiftDef.icon}${shift}${slotTxt} · ${tDate}<br>เลือกเวรของคุณที่จะให้แลกคืน`;
-      buildPickList();
-      document.getElementById('pickOverlay').classList.add('open');
-    }
-
-    function closePickOverlay() {
-      document.getElementById('pickOverlay').classList.remove('open');
-    }
-
-    function buildPickList() {
-      const list = document.getElementById('pickList');
-      list.innerHTML = '';
-      const myShifts = [];
-
-      const isTargetRobinson = targetSwap.shift === 'โรบินสัน';
-
-      // Scan whole dutyMap for requester's shifts not already swapped
-      Object.entries(dutyMap).forEach(([dk, name]) => {
-        if (name !== requester) return;
-        if (swapMap[dk]) return; // already swapped
-        // dk format: dateStr|shift|slot
-        const parts = dk.split('|');
-        if (parts.length < 3) return;
-        const [ds, sh, sl] = parts;
-
-        // Restriction: Robinson can only swap with Robinson
-        if (isTargetRobinson && sh !== 'โรบินสัน') return;
-        if (!isTargetRobinson && sh === 'โรบินสัน') return;
-
-        myShifts.push({ dk, dateStr: ds, shift: sh, slot: parseInt(sl) });
-      });
-      myShifts.sort((a,b) => a.dateStr.localeCompare(b.dateStr));
-      if (!myShifts.length) {
-        list.innerHTML = '<div class="pick-none">ไม่พบเวรของคุณที่สามารถแลกได้</div>';
-        return;
-      }
-      myShifts.forEach(({ dk, dateStr: ds, shift, slot }) => {
-        const d = new Date(ds);
-        const dateLabel = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
-        const shiftDef  = SHIFTS.find(s => s.key === shift);
-        const slotTxt   = shiftDef && shiftDef.slots > 1 ? ` ช่อง ${slot}` : '';
-        const icon = shiftDef ? shiftDef.icon : '';
-        const chip = document.createElement('div');
-        chip.className = 'pick-chip';
-        chip.innerHTML = `<span class="pc-date">${icon} ${dateLabel}</span><span class="pc-shift">เวร${shift}${slotTxt}</span>`;
-        chip.addEventListener('click', () => {
-          closePickOverlay();
-          openModal(targetSwap, { dk, dateStr: ds, shift, slot });
-        });
-        list.appendChild(chip);
-      });
-    }
-
     /* ─── Confirm modal ─── */
-    function openModal(target, mine) {
-      const { dateStr, shift, slot, originalName, dateObj } = target;
-      const mineDate = new Date(mine.dateStr);
-      const shiftDef  = SHIFTS.find(s => s.key === shift);
-      const slotTxt   = shiftDef.slots > 1 ? ` ช่อง ${slot}` : '';
-      const mineSD    = SHIFTS.find(s => s.key === mine.shift);
-      const mineST    = mineSD && mineSD.slots > 1 ? ` ช่อง ${mine.slot}` : '';
-      const thaiDate  = `${dateObj.getDate()} ${THAI_MONTHS[dateObj.getMonth()]} ${dateObj.getFullYear()+543}`;
-      const mineDate2 = `${mineDate.getDate()} ${THAI_MONTHS[mineDate.getMonth()]} ${mineDate.getFullYear()+543}`;
+    function openConfirmModal() {
+      const src = swapState.source;
+      const tgt = swapState.target;
+      
+      const srcDate = new Date(src.dateStr);
+      const tgtDate = new Date(tgt.dateStr);
+      
+      const srcSD = SHIFTS.find(s => s.key === src.shift);
+      const srcST = srcSD.slots > 1 ? ` ช่อง ${src.slot}` : '';
+      const srcThaiDate = `${srcDate.getDate()} ${THAI_MONTHS[srcDate.getMonth()]} ${srcDate.getFullYear()+543}`;
+      
+      const tgtSD = SHIFTS.find(s => s.key === tgt.shift);
+      const tgtST = tgtSD.slots > 1 ? ` ช่อง ${tgt.slot}` : '';
+      const tgtThaiDate = `${tgtDate.getDate()} ${THAI_MONTHS[tgtDate.getMonth()]} ${tgtDate.getFullYear()+543}`;
 
       document.getElementById('modalSub').textContent = `ตรวจสอบและยืนยันการแลก`;
       document.getElementById('swapPreview').innerHTML = `
         <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);">
-          <div style="font-size:.75rem;color:var(--day-lbl);margin-bottom:4px;">📥 คุณได้รับ</div>
-          <div><span class="label">${shiftDef.icon} เวร${shift}${slotTxt} · ${thaiDate}</span></div>
+          <div style="font-size:.75rem;color:var(--day-lbl);margin-bottom:4px;">📥 ${src.name} ได้รับ</div>
+          <div><span class="label">${tgt.icon} เวร${tgt.shift}${tgtST} · ${tgtThaiDate}</span></div>
           <div style="margin-top:4px;">
-            <span class="from-name" style="text-decoration:line-through;opacity:.55;font-size:.85rem;">${originalName}</span>
+            <span class="from-name" style="text-decoration:line-through;opacity:.55;font-size:.85rem;">${tgt.name}</span>
             <span style="margin:0 6px;opacity:.5;">→</span>
-            <strong style="color:#4db6ac;">${requester}</strong>
+            <strong style="color:#4db6ac;">${src.name}</strong>
           </div>
         </div>
         <div>
-          <div style="font-size:.75rem;color:var(--day-lbl);margin-bottom:4px;">📤 คุณให้</div>
-          <div><span class="label">${mineSD ? mineSD.icon : ''} เวร${mine.shift}${mineST} · ${mineDate2}</span></div>
+          <div style="font-size:.75rem;color:var(--day-lbl);margin-bottom:4px;">📤 ${tgt.name} ได้รับ</div>
+          <div><span class="label">${src.icon} เวร${src.shift}${srcST} · ${srcThaiDate}</span></div>
           <div style="margin-top:4px;">
-            <span class="from-name" style="text-decoration:line-through;opacity:.55;font-size:.85rem;">${requester}</span>
+            <span class="from-name" style="text-decoration:line-through;opacity:.55;font-size:.85rem;">${src.name}</span>
             <span style="margin:0 6px;opacity:.5;">→</span>
-            <strong style="color:#ff8a65;">${originalName}</strong>
+            <strong style="color:#ff8a65;">${tgt.name}</strong>
           </div>
         </div>
       `;
-      pendingSwap = { target, mine, thaiDate, slotTxt, mineDate2, mineST, originalName };
+      pendingSwap = { src, tgt };
       document.getElementById('btnConfirm').onclick = confirmSwap;
       document.getElementById('modalOverlay').classList.add('open');
     }
@@ -1319,27 +1216,26 @@
 
     function confirmSwap() {
       closeModal();
-      const { target, mine, originalName } = pendingSwap;
-      const { dateStr, shift, slot } = target;
-      const dk  = dutyKey(dateStr, shift, slot);
-      const dk2 = mine.dk;
+      const { src, tgt } = pendingSwap;
       const now = new Date().toISOString();
 
-      // Save both sides
-      swapMap[dk] = { original: originalName, requester, date: dateStr, shift, slot, savedAt: now };
-      swapMap[dk2] = { original: requester, requester: originalName, date: mine.dateStr, shift: mine.shift, slot: mine.slot, savedAt: now };
+      // For tgt's shift: original was tgt.name, requester is src.name
+      swapMap[tgt.dk] = { original: tgt.name, requester: src.name, date: tgt.dateStr, shift: tgt.shift, slot: tgt.slot, savedAt: now };
+      // For src's shift: original was src.name, requester is tgt.name
+      swapMap[src.dk] = { original: src.name, requester: tgt.name, date: src.dateStr, shift: src.shift, slot: src.slot, savedAt: now };
+      
       localStorage.setItem(SWAP_KEY, JSON.stringify(swapMap));
 
       // Send to Google Sheets (both sides)
-      [{ action:'swap', date:dateStr, shift, slot, name:originalName, requester },
-       { action:'swap', date:mine.dateStr, shift:mine.shift, slot:mine.slot, name:requester, requester:originalName }]
+      [{ action:'swap', date:tgt.dateStr, shift:tgt.shift, slot:tgt.slot, name:tgt.name, requester:src.name },
+       { action:'swap', date:src.dateStr, shift:src.shift, slot:src.slot, name:src.name, requester:tgt.name }]
       .forEach(p => { 
         fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e=>console.log(e));
       });
 
-      buildGrid(current.getFullYear(), current.getMonth());
+      resetSwapState();
       renderLog();
-      showToast(`✅ แลกเวร ${originalName} ↔ ${requester} สำเร็จ`);
+      showToast(`✅ แลกเวร ${src.name} ↔ ${tgt.name} สำเร็จ`);
     }
 
     /* ─── Swap log ─── */
@@ -1444,7 +1340,7 @@
     });
 
     /* ─── Init: show swap log if any ─── */
-    renderStaffButtons();
+    buildGrid(current.getFullYear(), current.getMonth());
     renderLog();
 
     // Auto Update on Focus via LocalStorage
@@ -1452,10 +1348,7 @@
       dutyMap = JSON.parse(localStorage.getItem(DUTY_KEY) || '{}');
       swapMap = JSON.parse(localStorage.getItem(SWAP_KEY) || '{}');
       staffMap = JSON.parse(localStorage.getItem('staffMap_v1') || 'null') || DEFAULT_STAFF;
-      renderStaffButtons();
-      if (requester) {
-        buildGrid(current.getFullYear(), current.getMonth());
-      }
+      buildGrid(current.getFullYear(), current.getMonth());
       renderLog();
     });
   </script>
