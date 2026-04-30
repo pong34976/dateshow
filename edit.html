@@ -411,6 +411,8 @@
     .sg-afternoon .shift-slot { background: var(--a-slot, rgba(255, 140, 60, .07)); border-color: var(--a-border, rgba(255, 140, 60, .14)); color: var(--txt); }
     .sg-night .shift-group-header { background: var(--n-bg, rgba(100, 140, 255, .12)); color: var(--txt); }
     .sg-night .shift-slot { background: var(--n-slot, rgba(100, 140, 255, .07)); border-color: var(--n-border, rgba(100, 140, 255, .14)); color: var(--txt); }
+    .sg-robinson .shift-group-header { background: rgba(0, 137, 123, .12); color: var(--txt); }
+    .sg-robinson .shift-slot { background: rgba(0, 137, 123, .07); border-color: rgba(0, 137, 123, .14); color: var(--txt); }
 
     .name-joe { color: var(--c-joe); }
     .name-wan { color: var(--c-wan); }
@@ -612,9 +614,10 @@
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const SHIFTS = [
-      { key: 'เช้า', cls: 'morning', icon: '☀️', slots: 2 },
-      { key: 'บ่าย', cls: 'afternoon', icon: '⛅', slots: 2 },
-      { key: 'ดึก', cls: 'night', icon: '🌙', slots: 1 },
+      { key: 'เช้า', display: 'ช', time: '08:00-16:00', start: 8, end: 16, cls: 'morning', icon: 'ช', slots: 2 },
+      { key: 'บ่าย', display: 'บ', time: '16:00-24:00', start: 16, end: 24, cls: 'afternoon', icon: 'บ', slots: 2 },
+      { key: 'ดึก', display: 'ด', time: '00:00-08:00', start: 0, end: 8, cls: 'night', icon: 'ด', slots: 1 },
+      { key: 'โรบินสัน', display: 'ร', time: '10:00-20:00', start: 10, end: 20, cls: 'robinson', icon: 'ร', slots: 1 },
     ];
     const DEFAULT_STAFF = {
       'โจ้': { name: 'โจ้', color: '#a78bfa' },
@@ -879,6 +882,27 @@
       if (name === '') {
         delete dutyMap[key];
       } else {
+        const targetShift = SHIFTS.find(s => s.key === modalShift);
+        if (targetShift) {
+           let curS = targetShift.start;
+           let curE = targetShift.end;
+           if (curE === 0) curE = 24;
+           for (let s of SHIFTS) {
+              for (let slot = 1; slot <= s.slots; slot++) {
+                 const existingDk = dutyKey(modalDate, s.key, slot);
+                 if (existingDk === key) continue;
+                 if (dutyMap[existingDk] === name) {
+                    let exS = s.start;
+                    let exE = s.end;
+                    if (exE === 0) exE = 24;
+                    if (curS < exE && curE > exS) {
+                       showToast(`❌ ${name} มีเวรชนกัน (${s.key})`, true);
+                       return;
+                    }
+                 }
+              }
+           }
+        }
         dutyMap[key] = name;
       }
       saveLocal();

@@ -777,9 +777,10 @@
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const SHIFTS = [
-      { key: 'เช้า', cls: 'morning', icon: '☀️', slots: 2 },
-      { key: 'บ่าย', cls: 'afternoon', icon: '⛅', slots: 2 },
-      { key: 'ดึก', cls: 'night', icon: '🌙', slots: 1 },
+      { key: 'เช้า', display: 'ช', time: '08:00-16:00', start: 8, end: 16, cls: 'morning', icon: 'ช', slots: 2 },
+      { key: 'บ่าย', display: 'บ', time: '16:00-24:00', start: 16, end: 24, cls: 'afternoon', icon: 'บ', slots: 2 },
+      { key: 'ดึก', display: 'ด', time: '00:00-08:00', start: 0, end: 8, cls: 'night', icon: 'ด', slots: 1 },
+      { key: 'โรบินสัน', display: 'ร', time: '10:00-20:00', start: 10, end: 20, cls: 'robinson', icon: 'ร', slots: 1 },
     ];
 
     const TODAY = new Date();
@@ -968,6 +969,10 @@
           textShadow = '0 1px 2px rgba(0,0,0,0.5)';
         } else if (key === 'ดึก') {
           bgColor = '#0d47a1';
+          textColor = '#fff';
+          textShadow = '0 1px 2px rgba(0,0,0,0.5)';
+        } else if (key === 'โรบินสัน') {
+          bgColor = '#00897b';
           textColor = '#fff';
           textShadow = '0 1px 2px rgba(0,0,0,0.5)';
         }
@@ -1321,7 +1326,7 @@
         items.push({
           sortDate: e.date,
           row: '<td>' + fmtD(e.date) + '</td>'
-            + '<td>' + (SHIFT_ICONS[e.shift] || '') + ' ' + e.shift + slotTxt + '</td>'
+            + '<td>' + (e.shift) + slotTxt + '</td>'
             + '<td><span style="background:#00897b;color:#fff;font-size:.62rem;padding:1px 7px;border-radius:6px;font-weight:700;">แลก</span></td>'
             + '<td style="font-size:.85rem;"><span style="text-decoration:line-through;opacity:.55;">' + e.original + '</span>'
             + ' <span style="opacity:.4;margin:0 4px;">→</span> '
@@ -1338,7 +1343,7 @@
         items.push({
           sortDate: e.date,
           row: '<td>' + fmtD(e.date) + '</td>'
-            + '<td>' + (SHIFT_ICONS[e.shift] || '') + ' ' + e.shift + (parseInt(e.slot) > 1 ? ' ช่อง ' + e.slot : '') + '</td>'
+            + '<td>' + (e.shift) + (parseInt(e.slot) > 1 ? ' ช่อง ' + e.slot : '') + '</td>'
             + '<td><span style="background:#e65100;color:#fff;font-size:.62rem;padding:1px 7px;border-radius:6px;font-weight:700;">ขาย</span></td>'
             + '<td style="font-size:.85rem;"><span style="text-decoration:line-through;opacity:.55;">' + e.original + '</span> <span style="opacity:.4;margin:0 4px;">→</span> <strong style="color:#ffb74d;">' + e.buyer + '</strong></td>'
             + '<td>' + cancelBtn("cancelSellTransfer('" + dk + "','" + e.original + "','" + e.date + "','" + e.shift + "','" + e.slot + "')") + '</td>'
@@ -1350,7 +1355,7 @@
         items.push({
           sortDate: e.date,
           row: '<td>' + fmtD(e.date) + '</td>'
-            + '<td>' + (SHIFT_ICONS[e.shift] || '') + ' ' + e.shift + (parseInt(e.slot) > 1 ? ' ช่อง ' + e.slot : '') + '</td>'
+            + '<td>' + (e.shift) + (parseInt(e.slot) > 1 ? ' ช่อง ' + e.slot : '') + '</td>'
             + '<td><span style="background:#bf360c;color:#fff;font-size:.62rem;padding:1px 7px;border-radius:6px;font-weight:700;">หาคนแทน</span></td>'
             + '<td style="font-size:.85rem;"><strong style="color:#ffb74d;">' + e.seller + '</strong> <span style="opacity:.55;">หาคนรับแทน...</span></td>'
             + '<td>' + cancelBtn("cancelSellItem('" + dk + "','" + e.date + "','" + e.shift + "','" + e.slot + "','" + e.seller + "')") + '</td>'

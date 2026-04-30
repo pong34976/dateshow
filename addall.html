@@ -366,9 +366,10 @@
         <thead>
           <tr>
             <th width="20%">ชื่อ</th>
-            <th width="26%">ช (เช้า)</th>
-            <th width="26%">บ (บ่าย)</th>
-            <th width="26%">ด (ดึก)</th>
+            <th width="20%">ช (เช้า)</th>
+            <th width="20%">บ (บ่าย)</th>
+            <th width="20%">ด (ดึก)</th>
+            <th width="20%">ร (โรบินสัน)</th>
           </tr>
         </thead>
         <tbody id="staffTbody">
@@ -429,7 +430,8 @@
     const SHIFTS = {
       'เช้า': { slots: 2 },
       'บ่าย': { slots: 2 },
-      'ดึก': { slots: 1 }
+      'ดึก': { slots: 1 },
+      'โรบินสัน': { slots: 1 }
     };
 
     // Initialize Month Picker to Next Month (default behavior for planning)
@@ -456,9 +458,10 @@
               <span>${st.name}</span>
             </div>
           </td>
-          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="เช้า" placeholder="เช่น 1,5,10"></td>
-          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="บ่าย" placeholder="เช่น 2,6,11"></td>
-          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="ดึก" placeholder="เช่น 3,7,12"></td>
+          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="เช้า" placeholder="เช่น 1,5"></td>
+          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="บ่าย" placeholder="เช่น 2,6"></td>
+          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="ดึก" placeholder="เช่น 3,7"></td>
+          <td><input type="text" class="shift-input" data-name="${st.name}" data-shift="โรบินสัน" placeholder="เช่น 4,8"></td>
         `;
         tbody.appendChild(tr);
       });

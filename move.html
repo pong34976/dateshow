@@ -639,6 +639,10 @@
       background: #0d47a1;
       color: #fff;
     }
+    .sh-robinson {
+      background: #00897b;
+      color: #fff;
+    }
 
     /* ── Pick-back overlay (step 3) ── */
     .pick-overlay {
@@ -1037,9 +1041,10 @@
     const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const SHIFTS = [
-      { key: 'เช้า', cls: 'morning', icon: '☀️', slots: 2, bg: 'sh-morning' },
-      { key: 'บ่าย', cls: 'afternoon', icon: '⛅', slots: 2, bg: 'sh-afternoon' },
-      { key: 'ดึก', cls: 'night', icon: '🌙', slots: 1, bg: 'sh-night' },
+      { key: 'เช้า', display: 'ช', time: '08:00-16:00', start: 8, end: 16, cls: 'morning', icon: 'ช', slots: 2, bg: 'sh-morning' },
+      { key: 'บ่าย', display: 'บ', time: '16:00-24:00', start: 16, end: 24, cls: 'afternoon', icon: 'บ', slots: 2, bg: 'sh-afternoon' },
+      { key: 'ดึก', display: 'ด', time: '00:00-08:00', start: 0, end: 8, cls: 'night', icon: 'ด', slots: 1, bg: 'sh-night' },
+      { key: 'โรบินสัน', display: 'ร', time: '10:00-20:00', start: 10, end: 20, cls: 'robinson', icon: 'ร', slots: 1, bg: 'sh-robinson' },
     ];
 
     const TODAY = new Date();
@@ -1231,6 +1236,9 @@
       const list = document.getElementById('pickList');
       list.innerHTML = '';
       const myShifts = [];
+
+      const isTargetRobinson = targetSwap.shift === 'โรบินสัน';
+
       // Scan whole dutyMap for requester's shifts not already swapped
       Object.entries(dutyMap).forEach(([dk, name]) => {
         if (name !== requester) return;
@@ -1239,6 +1247,11 @@
         const parts = dk.split('|');
         if (parts.length < 3) return;
         const [ds, sh, sl] = parts;
+
+        // Restriction: Robinson can only swap with Robinson
+        if (isTargetRobinson && sh !== 'โรบินสัน') return;
+        if (!isTargetRobinson && sh === 'โรบินสัน') return;
+
         myShifts.push({ dk, dateStr: ds, shift: sh, slot: parseInt(sl) });
       });
       myShifts.sort((a,b) => a.dateStr.localeCompare(b.dateStr));
@@ -1246,13 +1259,12 @@
         list.innerHTML = '<div class="pick-none">ไม่พบเวรของคุณที่สามารถแลกได้</div>';
         return;
       }
-      const SHIFT_ICONS = { 'เช้า':'☀️', 'บ่าย':'⛅', 'ดึก':'🌙' };
       myShifts.forEach(({ dk, dateStr: ds, shift, slot }) => {
         const d = new Date(ds);
         const dateLabel = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
         const shiftDef  = SHIFTS.find(s => s.key === shift);
         const slotTxt   = shiftDef && shiftDef.slots > 1 ? ` ช่อง ${slot}` : '';
-        const icon = SHIFT_ICONS[shift] || '';
+        const icon = shiftDef ? shiftDef.icon : '';
         const chip = document.createElement('div');
         chip.className = 'pick-chip';
         chip.innerHTML = `<span class="pc-date">${icon} ${dateLabel}</span><span class="pc-shift">เวร${shift}${slotTxt}</span>`;

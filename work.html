@@ -723,11 +723,11 @@
           <div class="timeline-ticks" id="timelineTicks"></div>
         </div>
         <div class="presets">
-          <button class="preset-btn" onclick="setPreset(8,12)">08:00–12:00</button>
-          <button class="preset-btn" onclick="setPreset(8,16)">08:00–16:00</button>
-          <button class="preset-btn" onclick="setPreset(13,16)">13:00–16:00</button>
-          <button class="preset-btn" onclick="setPreset(9,11)">09:00–11:00</button>
-          <button class="preset-btn" onclick="setPreset(14,16)">14:00–16:00</button>
+          <button class="preset-btn" onclick="setPreset(8,16,'ช')">ช (08:00-16:00)</button>
+          <button class="preset-btn" onclick="setPreset(16,24,'บ')">บ (16:00-24:00)</button>
+          <button class="preset-btn" onclick="setPreset(0,8,'ด')">ด (00:00-08:00)</button>
+          <button class="preset-btn" onclick="setPreset(10,20,'ร')">ร (10:00-20:00)</button>
+          <button class="preset-btn" onclick="setPreset(8,17,'ล')">ล (08:00-17:00)</button>
         </div>
       </div>
 
@@ -769,10 +769,10 @@
 
     const CHIP_COLORS = ['#1565c0', '#0277bd', '#00838f', '#2e7d32', '#6a1b9a', '#ad1457', '#e65100', '#4e342e'];
 
-    // Time range: 08:00 – 16:00 = 8 hours = 480 minutes
-    const TIME_START = 8;    // 08:00
-    const TIME_END = 16;     // 16:00
-    const TIME_TOTAL = TIME_END - TIME_START; // 8 hours
+    // Time range: 00:00 – 24:00 = 24 hours
+    const TIME_START = 0;    // 00:00
+    const TIME_END = 24;     // 24:00
+    const TIME_TOTAL = TIME_END - TIME_START; // 24 hours
 
     const TODAY = new Date();
     let current = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
@@ -987,7 +987,7 @@
     function buildTicks() {
       const ticks = document.getElementById('timelineTicks');
       ticks.innerHTML = '';
-      for (let h = TIME_START; h <= TIME_END; h++) {
+      for (let h = TIME_START; h <= TIME_END; h += 3) {
         const t = document.createElement('div');
         t.className = 'tick';
         t.textContent = `${String(h).padStart(2, '0')}:00`;
@@ -1090,9 +1090,12 @@
       bar.addEventListener('pointerup', onPointerUp);
     }
 
-    function setPreset(s, e) {
+    function setPreset(s, e, name) {
       selStart = s;
       selEnd = e;
+      if (name) {
+        document.getElementById('taskInput').value = name;
+      }
       updateFill();
     }
 
@@ -1117,8 +1120,8 @@
         if (t.people) t.people.forEach(p => selectedPeople.add(p));
         document.getElementById('modalTitle').textContent = '✏️ แก้ไขงาน';
       } else {
-        selStart = TIME_START;
-        selEnd = TIME_END;
+        selStart = 8;
+        selEnd = 16;
         document.getElementById('taskInput').value = '';
         document.getElementById('modalTitle').textContent = '📅 เพิ่มงาน';
       }
@@ -1138,8 +1141,17 @@
     });
 
     document.getElementById('btnSave').addEventListener('click', saveEntry);
-    document.getElementById('taskInput').addEventListener('keydown', e => {
+    const taskInput = document.getElementById('taskInput');
+    taskInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') saveEntry();
+    });
+    taskInput.addEventListener('input', e => {
+      const v = e.target.value.trim().toUpperCase();
+      if (v === 'ช') setPreset(8, 16);
+      else if (v === 'บ') setPreset(16, 24);
+      else if (v === 'ด') setPreset(0, 8);
+      else if (v === 'ร') setPreset(10, 20);
+      else if (v === 'ล') setPreset(8, 17);
     });
 
     function saveEntry() {
@@ -1152,6 +1164,29 @@
       }
 
       const people = [...selectedPeople];
+      
+      const existing = workMap[pendingDate] || [];
+      for (let p of people) {
+        for (let i = 0; i < existing.length; i++) {
+          if (editingIndex === i) continue;
+          const ex = existing[i];
+          if (ex.people && ex.people.includes(p)) {
+            let exS = hourFromStr(ex.start);
+            let exE = hourFromStr(ex.end);
+            if (exE === 0) exE = 24;
+            
+            let curS = selStart;
+            let curE = selEnd;
+            if (curE === 0) curE = 24;
+            
+            if (curS < exE && curE > exS) {
+              showToast(`❌ ${p} มีเวรชนกัน (${ex.start}-${ex.end})`, true);
+              return;
+            }
+          }
+        }
+      }
+
       const entry = {
         start: hhmm(selStart),
         end: hhmm(selEnd),
