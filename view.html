@@ -565,15 +565,57 @@
       box-shadow: none;
       display: flex;
       flex-direction: column;
+      pointer-events: none;
     }
 
     body.calendar-only .cal-header {
       flex: 0 0 auto;
-      padding: 10px 60px 10px 14px;
+      padding: 6px 58px 6px 10px;
+      gap: 6px;
+      min-height: 52px;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+
+    body.calendar-only .cal-title {
+      font-size: 1.08rem;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    body.calendar-only .nav-group {
+      display: flex;
+      gap: 4px;
+      opacity: .58;
+      transform: scale(.72);
+      transform-origin: right center;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    body.calendar-only .today-btn {
+      width: auto;
+      min-height: 30px;
+      padding: 4px 8px;
+      font-size: .72rem;
+      border-radius: 8px;
+    }
+
+    body.calendar-only .nav-group .nav-btn,
+    body.calendar-only .nav-btn {
+      width: 30px;
+      height: 30px;
+      font-size: 1rem;
+      border-radius: 50%;
     }
 
     body.calendar-only .day-labels {
       flex: 0 0 auto;
+    }
+
+    body.calendar-only .day-lbl {
+      padding: 5px 0;
+      font-size: .76rem;
     }
 
     body.calendar-only .cal-grid {
@@ -584,30 +626,55 @@
 
     body.calendar-only .cal-cell {
       min-height: 0;
-      padding: 5px;
+      padding: 4px;
       overflow: hidden;
     }
 
+    body.calendar-only .day-num {
+      width: 22px;
+      height: 22px;
+      font-size: .8rem;
+    }
+
+    body.calendar-only .holiday-label {
+      font-size: .54rem;
+      padding: 1px 3px;
+      margin-bottom: 1px;
+    }
+
     body.calendar-only .big-shift-slot {
-      min-height: 38px !important;
-      margin-top: 3px !important;
+      min-height: 30px !important;
+      margin-top: 2px !important;
+      padding: 3px !important;
     }
 
     body.calendar-only .big-shift-slot span:last-child {
-      font-size: 1.15rem !important;
+      font-size: .98rem !important;
     }
 
     body.calendar-only .stat-bar {
-      margin-top: 6px;
+      margin-top: 4px;
+      gap: 4px;
+      flex-wrap: nowrap;
     }
 
     body.calendar-only .stat-chip {
-      padding: 4px 8px;
-      font-size: .75rem;
+      min-height: 24px;
+      padding: 2px 6px;
+      font-size: .68rem;
+      border-radius: 8px;
+    }
+
+    body.calendar-only .stat-chip .s-num {
+      font-size: .9rem;
     }
 
     body.calendar-only .calendar-only-exit {
       display: inline-flex;
+      min-height: 30px;
+      padding: 4px 10px;
+      font-size: .78rem;
+      pointer-events: auto;
     }
 
     @media (max-width: 760px) {
@@ -740,7 +807,7 @@
       <span class="badge" id="nameBadge">...</span>
     </div>
     <div class="theme-bar">
-      <button id="btnCalendarOnly" type="button" class="btn-action" style="background:#455a64;">🗓️ ปฏิทิน</button>
+      <a id="btnCalendarOnly" href="view.html?calendar=1" class="btn-action" style="background:#455a64;">🗓️ ปฏิทิน</a>
       <span class="theme-label">🎨</span>
       <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic"></div>
       <div class="swatch" data-theme="paper" style="background:linear-gradient(135deg,#795548,#f0ebe1)" title="Paper"></div>
@@ -750,7 +817,7 @@
     </div>
   </div>
 
-  <button id="btnExitCalendarOnly" type="button" class="btn-action calendar-only-exit">ออก</button>
+  <a id="btnExitCalendarOnly" href="view.html" class="btn-action calendar-only-exit">ออก</a>
 
   <!-- Calendar -->
   <div class="calendar">
@@ -805,11 +872,11 @@
       targetName = aliasMap[rawUser.toLowerCase()] || rawUser || '';
     }
 
-    document.getElementById('btnCalendarOnly')?.addEventListener('click', () => {
-      setCalendarOnly(!document.body.classList.contains('calendar-only'));
-    });
-    document.getElementById('btnExitCalendarOnly')?.addEventListener('click', () => setCalendarOnly(false));
-    setCalendarOnly(localStorage.getItem('viewCalendarOnly_v1') === '1');
+    const calendarLink = document.getElementById('btnCalendarOnly');
+    const calendarExitLink = document.getElementById('btnExitCalendarOnly');
+    if (calendarLink) calendarLink.href = calendarModeHref(true);
+    if (calendarExitLink) calendarExitLink.href = calendarModeHref(false);
+    setCalendarOnly(new URLSearchParams(window.location.search).get('calendar') === '1');
 
     if (targetName) {
       document.getElementById('pageTitle').textContent = `เวรของ ${targetName}`;
@@ -1067,9 +1134,13 @@
 
     function setCalendarOnly(on) {
       document.body.classList.toggle('calendar-only', on);
-      localStorage.setItem('viewCalendarOnly_v1', on ? '1' : '0');
-      const btn = document.getElementById('btnCalendarOnly');
-      if (btn) btn.textContent = on ? '↩️ ปกติ' : '🗓️ ปฏิทิน';
+    }
+
+    function calendarModeHref(on) {
+      const url = new URL(window.location.href);
+      if (on) url.searchParams.set('calendar', '1');
+      else url.searchParams.delete('calendar');
+      return url.href;
     }
 
     applyTheme(savedTheme);
