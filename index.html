@@ -635,6 +635,163 @@
       margin-left: 4px;
     }
 
+    .history-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, .68);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+
+    .history-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .history-overlay > .log-hdr,
+    .history-overlay > .log-table {
+      display: none;
+    }
+
+    .history-panel {
+      width: min(720px, 100%);
+      max-height: min(86vh, 760px);
+      overflow: auto;
+      background: var(--modal-bg, var(--bg));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .65);
+    }
+
+    .history-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--hdr);
+    }
+
+    .history-title {
+      color: var(--hdr-txt);
+      font-size: 1.08rem;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .history-sub {
+      margin-top: 3px;
+      color: var(--day-lbl);
+      font-size: .84rem;
+      line-height: 1.45;
+    }
+
+    .history-close {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .08);
+      color: var(--hdr-txt);
+      font-size: 1.1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .history-body {
+      padding: 16px 18px 18px;
+    }
+
+    .history-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .history-stat {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .045);
+      color: var(--txt);
+      text-align: center;
+    }
+
+    .history-stat strong {
+      display: block;
+      color: var(--hdr-txt);
+      font-size: 1.35rem;
+      line-height: 1.1;
+    }
+
+    .history-section {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .history-section-title {
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, .055);
+      color: var(--hdr-txt);
+      font-weight: 800;
+      font-size: .9rem;
+    }
+
+    .history-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      color: var(--txt);
+      font-size: .88rem;
+      line-height: 1.55;
+    }
+
+    .history-row:first-child {
+      border-top: none;
+    }
+
+    .history-meta {
+      color: var(--day-lbl);
+      font-size: .78rem;
+      margin-top: 2px;
+    }
+
+    .history-empty {
+      padding: 14px 12px;
+      color: var(--day-lbl);
+      font-size: .88rem;
+      line-height: 1.5;
+      border-top: 1px solid var(--border);
+    }
+
+    .history-danger {
+      min-height: 34px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #e53935;
+      background: rgba(229, 57, 53, .12);
+      color: #ef9a9a;
+      cursor: pointer;
+      font-family: 'Sarabun', sans-serif;
+      font-size: .8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
     body.calendar-only {
       padding: 0;
       overflow: hidden;
@@ -911,6 +1068,18 @@
         min-width: 720px;
       }
 
+      .history-panel {
+        max-height: 92vh;
+      }
+
+      .history-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .history-row {
+        grid-template-columns: 1fr;
+      }
+
       body.calendar-only .calendar-only-exit {
         width: auto;
       }
@@ -998,7 +1167,20 @@
   </div>
 
   <!-- Unified Activity Log (แลก + ขาย + ประกาศขาย) -->
-  <div class="swap-log" id="activityLog" style="display:none;">
+  <div class="history-overlay" id="historyOverlay">
+    <div class="history-panel">
+      <div class="history-head">
+        <div>
+          <div class="history-title" id="historyTitle">ประวัติการแลก/ขายเวร</div>
+          <div class="history-sub" id="historySub">เลือกวันที่หรือเวรในปฏิทินเพื่อดูรายละเอียด</div>
+        </div>
+        <button class="history-close" type="button" onclick="closeHistoryModal()">×</button>
+      </div>
+      <div class="history-body">
+        <div class="history-summary" id="historySummary"></div>
+        <div id="historyBody"></div>
+      </div>
+    </div>
     <div class="log-hdr">🗓️ ประวัติการแลก / ขายเวร <span id="activityCount"
         style="font-weight:400;font-size:.8rem;opacity:.65;"></span></div>
     <table class="log-table">
@@ -1236,6 +1418,68 @@
     }
     function dutyKey(date, shift, slot) { return `${date}|${shift}|${slot}`; }
 
+    let activeHistory = { type: '', dk: '', date: '' };
+
+    function enc(v) {
+      return encodeURIComponent(String(v || ''));
+    }
+
+    function dec(v) {
+      try { return decodeURIComponent(String(v || '')); }
+      catch { return String(v || ''); }
+    }
+
+    function htmlEscape(v) {
+      return String(v ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+    }
+
+    function fmtThaiDate(dateStr) {
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return dateStr || '-';
+      return `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`;
+    }
+
+    function parseDutyKey(dk) {
+      const [date = '', shift = '', slot = ''] = String(dk || '').split('|');
+      return { date, shift, slot };
+    }
+
+    function findSwapPartner(dk, entry) {
+      const entries = Object.entries(swapMap);
+      return entries.find(([otherDk, other]) =>
+        otherDk !== dk &&
+        other.original === entry.requester &&
+        other.requester === entry.original &&
+        (!entry.savedAt || !other.savedAt || entry.savedAt === other.savedAt)
+      ) || entries.find(([otherDk, other]) =>
+        otherDk !== dk &&
+        other.original === entry.requester &&
+        other.requester === entry.original
+      );
+    }
+
+    function getSlotHistory(dk) {
+      const parsed = parseDutyKey(dk);
+      const swapEntry = swapMap[dk] || null;
+      const sellEntry = sellMap[dk] || null;
+      const transferEntry = sellTransferMap[dk] || null;
+      const partner = swapEntry ? findSwapPartner(dk, swapEntry) : null;
+      return { dk, ...parsed, swapEntry, sellEntry, transferEntry, partner };
+    }
+
+    function getDateHistory(dateStr) {
+      const histories = [];
+      SHIFTS.forEach(({ key, slots }) => {
+        for (let slot = 1; slot <= slots; slot++) {
+          const dk = dutyKey(dateStr, key, slot);
+          if (dutyMap[dk] || swapMap[dk] || sellMap[dk] || sellTransferMap[dk]) histories.push(getSlotHistory(dk));
+        }
+      });
+      return histories;
+    }
+
     // ─── Build Calendar Grid ─────────────────────────────
     function buildGrid(year, month) {
       const grid = document.getElementById('calGrid');
@@ -1276,6 +1520,9 @@
       if (dow === 6) cell.classList.add('is-sat');
 
       const dateStr = fmtDate(dateObj);
+      if (!otherMonth) {
+        cell.addEventListener('click', () => openDateHistory(dateStr));
+      }
       const holidayName = holidayMap[dateStr];
       if (holidayName && dow !== 0 && dow !== 6) cell.classList.add('is-holiday');
 
@@ -1333,6 +1580,7 @@
           if (name) {
             hasAnyShift = true;
             const dk = dutyKey(dateStr, key, s);
+            const dkArg = enc(dk);
             const swapEntry = swapMap[dk];
             const sellEntry = sellMap[dk];
             const transferEntry = sellTransferMap[dk];
@@ -1340,7 +1588,7 @@
             if (swapEntry) {
               // แลกเวร: ~~original~~ แลก requester
               html = `
-                <div class="view-shift is-swapped" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;" title="${key} - แลกเวร: ${swapEntry.original} → ${swapEntry.requester}">
+                <div class="view-shift is-swapped" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;" title="${key} - แลกเวร: ${swapEntry.original} → ${swapEntry.requester}" onclick="event.stopPropagation();openSlotHistory('${dkArg}')">
                   <span class="swap-badge-idx">แลก</span>
                   <span class="swap-old">${icon} ${swapEntry.original}</span>
                   <span class="swap-new">${swapEntry.requester}</span>
@@ -1350,7 +1598,7 @@
               // ขายเวร: ~~seller~~ ขาย buyer
               const displayBuyer = transferEntry.buyer; // ป้องกันบักตอน sync ทีหลัง
               html = `
-                <div class="view-shift is-swapped" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;" title="${key} - ขาย: ${transferEntry.original} → ${displayBuyer}">
+                <div class="view-shift is-swapped" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;" title="${key} - ขาย: ${transferEntry.original} → ${displayBuyer}" onclick="event.stopPropagation();openSlotHistory('${dkArg}')">
                   <span class="swap-badge-idx" style="background:#e65100;">ขาย</span>
                   <span class="swap-old">${icon} ${transferEntry.original}</span>
                   <span class="swap-new">${displayBuyer}</span>
@@ -1361,7 +1609,7 @@
               html = `
                 <div class="view-shift" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};margin-bottom:4px;cursor:pointer;"
                   title="คลิกเพื่อเลือกคนแทน ${name}"
-                  onclick="openBuyModal('${dk}','${dateStr}','${key}','${s}','${name}')">
+                  onclick="event.stopPropagation();openSlotHistory('${dkArg}')">
                   <span class="swap-badge-idx" style="background:#e65100;position:relative;top:0;right:0;">ขาย</span>
                   <span>${icon} ${name}</span>
                   <span style="font-size:.7rem;opacity:.75;margin-left:2px;">หาคนแทน</span>
@@ -1369,9 +1617,9 @@
               `;
             } else {
               html = `
-                <a href="view.html?u=${name}" class="view-shift" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};text-decoration:none;margin-bottom:4px;" title="${key} - ${name}">
+                <div class="view-shift" style="background:${bgColor};color:${textColor};text-shadow:${textShadow};text-decoration:none;margin-bottom:4px;cursor:pointer;" title="${key} - ${name}" onclick="event.stopPropagation();openSlotHistory('${dkArg}')">
                   <span>${icon} ${name}</span>
-                </a>
+                </div>
               `;
             }
             shiftsDiv.insertAdjacentHTML('beforeend', html);
@@ -1384,6 +1632,136 @@
     }
 
     // ─── Nav buttons ─────────────────────────────────────
+    function closeHistoryModal() {
+      document.getElementById('historyOverlay')?.classList.remove('open');
+    }
+
+    function renderHistorySummary(items) {
+      const swapCount = items.filter(it => it.swapEntry).length;
+      const soldCount = items.filter(it => it.transferEntry).length;
+      const sellingCount = items.filter(it => it.sellEntry).length;
+      document.getElementById('historySummary').innerHTML = `
+        <div class="history-stat"><strong>${swapCount}</strong><span>แลกกี่ต่อ</span></div>
+        <div class="history-stat"><strong>${soldCount}</strong><span>ขายกี่ต่อ</span></div>
+        <div class="history-stat"><strong>${sellingCount}</strong><span>ประกาศขาย</span></div>
+      `;
+    }
+
+    function slotName(item) {
+      const slotText = parseInt(item.slot, 10) > 1 ? ` ช่อง ${item.slot}` : '';
+      return `${item.shift}${slotText} · ${fmtThaiDate(item.date)}`;
+    }
+
+    function renderHistoryRows(title, rows, emptyText) {
+      if (!rows.length) {
+        return `
+          <div class="history-section">
+            <div class="history-section-title">${title}</div>
+            <div class="history-empty">${emptyText}</div>
+          </div>`;
+      }
+      return `
+        <div class="history-section">
+          <div class="history-section-title">${title}</div>
+          ${rows.join('')}
+        </div>`;
+    }
+
+    function renderSlotHistory(item) {
+      renderHistorySummary([item]);
+      const swapRows = [];
+      const sellRows = [];
+
+      if (item.swapEntry) {
+        const partnerDk = item.partner ? item.partner[0] : '';
+        const partnerEntry = item.partner ? item.partner[1] : null;
+        const partnerText = partnerEntry
+          ? `${partnerEntry.shift}${parseInt(partnerEntry.slot, 10) > 1 ? ` ช่อง ${partnerEntry.slot}` : ''} · ${fmtThaiDate(partnerEntry.date)}`
+          : 'ไม่พบคู่วันที่ในข้อมูลล่าสุด';
+        const cancelDks = partnerDk ? `${item.dk}||${partnerDk}` : item.dk;
+        swapRows.push(`
+          <div class="history-row">
+            <div>
+              <strong>${htmlEscape(item.swapEntry.original)}</strong> → <strong>${htmlEscape(item.swapEntry.requester)}</strong>
+              <div class="history-meta">แลกกับ: ${htmlEscape(partnerText)}</div>
+            </div>
+            <button class="history-danger" type="button" onclick="cancelSwapItem('${enc(cancelDks)}')">ยกเลิกแลก</button>
+          </div>`);
+      }
+
+      if (item.transferEntry) {
+        sellRows.push(`
+          <div class="history-row">
+            <div>
+              <strong>${htmlEscape(item.transferEntry.original)}</strong> → <strong>${htmlEscape(item.transferEntry.buyer)}</strong>
+              <div class="history-meta">ขายสำเร็จ: ${slotName(item)}</div>
+            </div>
+            <button class="history-danger" type="button" onclick="cancelSellTransfer('${enc(item.dk)}','${enc(item.transferEntry.original)}','${enc(item.date)}','${enc(item.shift)}','${enc(item.slot)}')">ยกเลิกขาย</button>
+          </div>`);
+      }
+
+      if (item.sellEntry) {
+        sellRows.push(`
+          <div class="history-row">
+            <div>
+              <strong>${htmlEscape(item.sellEntry.seller)}</strong> กำลังประกาศขายเวร
+              <div class="history-meta">ประกาศขาย: ${slotName(item)}</div>
+            </div>
+            <button class="history-danger" type="button" onclick="cancelSellItem('${enc(item.dk)}','${enc(item.date)}','${enc(item.shift)}','${enc(item.slot)}','${enc(item.sellEntry.seller)}')">ยกเลิกประกาศ</button>
+          </div>`);
+      }
+
+      document.getElementById('historyBody').innerHTML =
+        renderHistoryRows('แลกกับวันไหนบ้าง', swapRows, 'เวรนี้ไม่มีประวัติการแลกในข้อมูลล่าสุด') +
+        renderHistoryRows('ประวัติการขายเวร', sellRows, 'เวรนี้ไม่มีประวัติการขายหรือประกาศขายในข้อมูลล่าสุด');
+    }
+
+    function openSlotHistory(dk) {
+      dk = decodeURIComponent(dk);
+      const item = getSlotHistory(dk);
+      activeHistory = { type: 'slot', dk, date: item.date };
+      document.getElementById('historyTitle').textContent = 'ประวัติการแลก/ขายเวร';
+      document.getElementById('historySub').textContent = slotName(item);
+      renderSlotHistory(item);
+      document.getElementById('historyOverlay').classList.add('open');
+    }
+
+    function openDateHistory(dateStr) {
+      dateStr = decodeURIComponent(dateStr);
+      const items = getDateHistory(dateStr);
+      activeHistory = { type: 'date', dk: '', date: dateStr };
+      document.getElementById('historyTitle').textContent = 'ประวัติการแลก/ขายเวรทั้งวัน';
+      document.getElementById('historySub').textContent = fmtThaiDate(dateStr);
+      renderHistorySummary(items);
+
+      const rows = items
+        .filter(it => it.swapEntry || it.transferEntry || it.sellEntry)
+        .map(it => {
+          const labels = [];
+          if (it.swapEntry) labels.push(`แลก: ${htmlEscape(it.swapEntry.original)} → ${htmlEscape(it.swapEntry.requester)}`);
+          if (it.transferEntry) labels.push(`ขาย: ${htmlEscape(it.transferEntry.original)} → ${htmlEscape(it.transferEntry.buyer)}`);
+          if (it.sellEntry) labels.push(`ประกาศขาย: ${htmlEscape(it.sellEntry.seller)}`);
+          return `
+            <div class="history-row">
+              <div>
+                <strong>${slotName(it)}</strong>
+                <div class="history-meta">${labels.join('<br>')}</div>
+              </div>
+              <button class="history-danger" type="button" onclick="openSlotHistory('${enc(it.dk)}')">ดูรายละเอียด</button>
+            </div>`;
+        });
+
+      document.getElementById('historyBody').innerHTML =
+        renderHistoryRows('รายการในวันนี้', rows, 'วันนี้ไม่มีประวัติการแลก/ขายเวรในข้อมูลล่าสุด');
+      document.getElementById('historyOverlay').classList.add('open');
+    }
+
+    function refreshOpenHistory() {
+      if (!document.getElementById('historyOverlay')?.classList.contains('open')) return;
+      if (activeHistory.type === 'slot' && activeHistory.dk) openSlotHistory(activeHistory.dk);
+      else if (activeHistory.type === 'date' && activeHistory.date) openDateHistory(activeHistory.date);
+    }
+
     document.getElementById('btnPrev').addEventListener('click', () => {
       current.setMonth(current.getMonth() - 1);
       buildGrid(current.getFullYear(), current.getMonth());
@@ -1632,6 +2010,7 @@
       renderLegend();
       buildGrid(current.getFullYear(), current.getMonth());
       renderActivityLog();
+      refreshOpenHistory();
     });
 
     function renderSwapLog() { renderActivityLog(); } // legacy alias
@@ -1680,14 +2059,18 @@
       showToast(`✅ ${buyerName} รับเวร${shift} ${thaiDate} แทน ${seller}`);
     }
 
-    document.getElementById('buyModalOverlay').addEventListener('click', e => {
+    document.getElementById('buyModalOverlay')?.addEventListener('click', e => {
       if (e.target === e.currentTarget) closeBuyModal();
+    });
+    document.getElementById('historyOverlay')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeHistoryModal();
     });
 
     /* ─── renderActivityLog — Unified log (แลก + ขาย + ประกาศขาย) ─── */
     const SHIFT_ICONS = { 'เช้า': '☀️', 'บ่าย': '⛅', 'ดึก': '🌙' };
 
     function renderActivityLog() {
+      return;
       const logEl = document.getElementById('activityLog');
       const body = document.getElementById('activityBody');
       const items = [];
@@ -1758,6 +2141,8 @@
 
     /* ─── Cancel functions ─── */
     function cancelSwapItem(dksRaw) {
+      dksRaw = dec(dksRaw);
+      if (!confirm('ยืนยันยกเลิกการแลกเวรนี้?')) return;
       const dks = dksRaw.split('||');
       dks.forEach(dk => { delete swapMap[dk]; });
       localStorage.setItem(SWAP_KEY, JSON.stringify(swapMap));
@@ -1765,10 +2150,17 @@
       fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
       buildGrid(current.getFullYear(), current.getMonth());
       renderActivityLog();
+      refreshOpenHistory();
       showToast('↩ ยกเลิกการแลกเวรแล้ว');
     }
 
     function cancelSellTransfer(dk, origSeller, date, shift, slot) {
+      dk = dec(dk);
+      origSeller = dec(origSeller);
+      date = dec(date);
+      shift = dec(shift);
+      slot = dec(slot);
+      if (!confirm(`ยืนยันยกเลิกการขายเวรนี้?\nระบบจะคืนเวร${shift} ${date} ให้ ${origSeller}`)) return;
       // คืนเวรให้ผู้ขายเดิม
       dutyMap[dk] = origSeller;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dutyMap));
@@ -1781,16 +2173,24 @@
       fetch(GS_URL + '?' + new URLSearchParams(p2).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
       buildGrid(current.getFullYear(), current.getMonth());
       renderActivityLog();
+      refreshOpenHistory();
       showToast(`↩ ยกเลิกการขายเวร — คืนเวรให้ ${origSeller}`);
     }
 
     function cancelSellItem(dk, date, shift, slot, seller) {
+      dk = dec(dk);
+      date = dec(date);
+      shift = dec(shift);
+      slot = dec(slot);
+      seller = dec(seller);
+      if (!confirm(`ยืนยันยกเลิกประกาศขายเวรนี้?\n${seller} · เวร${shift} ${date}`)) return;
       delete sellMap[dk];
       localStorage.setItem('sellMap_v1', JSON.stringify(sellMap));
       const p = { action: 'cancelSell', date, shift, slot, name: seller };
       fetch(GS_URL + '?' + new URLSearchParams(p).toString() + '&t=' + Date.now(), { mode: 'no-cors' }).catch(e => console.warn(e));
       buildGrid(current.getFullYear(), current.getMonth());
       renderActivityLog();
+      refreshOpenHistory();
       showToast('↩ ยกเลิกการประกาศขายเวรแล้ว');
     }
   </script>
