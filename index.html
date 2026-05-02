@@ -125,29 +125,34 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 16px 12px 40px;
+      padding: 14px 12px 40px;
       transition: background .4s;
+      color: var(--txt);
     }
 
     .topbar {
       width: 100%;
       max-width: 1100px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto;
       gap: 12px;
-      flex-wrap: wrap;
       margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, .045);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .24);
+      backdrop-filter: blur(12px);
     }
 
     .app-title {
-      font-size: 1.1rem;
+      font-size: 1.08rem;
       font-weight: 700;
       color: var(--hdr-txt);
-      letter-spacing: .5px;
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
 
     .app-title .badge {
@@ -161,9 +166,25 @@
 
     .theme-bar {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
       flex-wrap: wrap;
+      justify-content: flex-end;
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .action-group,
+    .theme-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .theme-group {
+      padding-left: 10px;
+      border-left: 1px solid var(--border);
     }
 
     .theme-label {
@@ -196,17 +217,21 @@
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
+      grid-column: 1 / -1;
+      padding-top: 2px;
     }
 
     .leg-chip {
       display: flex;
       align-items: center;
       gap: 5px;
-      font-size: .8rem;
+      font-size: .86rem;
       color: var(--hdr-txt);
-      opacity: .85;
+      opacity: .95;
       text-decoration: none;
       cursor: pointer;
+      min-height: 28px;
+      padding: 2px 4px;
     }
 
     .leg-chip:hover {
@@ -221,20 +246,31 @@
     }
 
     .btn-action {
-      padding: 6px 14px;
+      padding: 8px 13px;
       background: var(--btn-edit);
       color: #fff;
       text-decoration: none;
       font-weight: 600;
-      font-size: 0.85rem;
-      border-radius: 20px;
+      font-size: 0.9rem;
+      line-height: 1.2;
+      border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      transition: transform 0.2s;
-      display: inline-block;
+      transition: transform 0.2s, filter .2s, box-shadow .2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-height: 38px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Sarabun', sans-serif;
+      white-space: nowrap;
     }
 
     .btn-action:hover {
       transform: scale(1.05);
+      filter: brightness(1.08);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .36);
     }
 
     .calendar {
@@ -246,6 +282,15 @@
       box-shadow: var(--shadow);
       border: 1px solid var(--border);
       backdrop-filter: blur(14px);
+    }
+
+    .calendar-only-exit {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 2500;
+      display: none;
+      background: var(--accent);
     }
 
     .cal-header {
@@ -263,7 +308,6 @@
       font-size: 1.55rem;
       font-weight: 700;
       color: var(--hdr-txt);
-      letter-spacing: .3px;
     }
 
     .cal-title span {
@@ -324,9 +368,8 @@
     .day-lbl {
       text-align: center;
       padding: 10px 0;
-      font-size: .75rem;
+      font-size: .82rem;
       font-weight: 700;
-      letter-spacing: 1px;
       color: var(--day-lbl);
       text-transform: uppercase;
     }
@@ -443,8 +486,12 @@
       padding: 6px 4px;
       border-radius: 8px;
       font-weight: 700;
-      font-size: 0.88rem;
+      font-size: 0.95rem;
+      line-height: 1.15;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      min-height: 30px;
+      text-align: center;
+      word-break: keep-all;
     }
 
     /* Swap display */
@@ -457,13 +504,13 @@
 
     .swap-old {
       text-decoration: line-through;
-      opacity: .55;
-      font-size: .72rem;
+      opacity: .68;
+      font-size: .78rem;
       font-weight: 600;
     }
 
     .swap-new {
-      font-size: .85rem;
+      font-size: .92rem;
       font-weight: 800;
     }
 
@@ -587,11 +634,232 @@
       vertical-align: middle;
       margin-left: 4px;
     }
+
+    body.calendar-only {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    body.calendar-only .topbar,
+    body.calendar-only .swap-log {
+      display: none !important;
+    }
+
+    body.calendar-only .calendar {
+      width: 100vw;
+      max-width: none;
+      height: 100vh;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.calendar-only .cal-header {
+      flex: 0 0 auto;
+      padding: 10px 60px 10px 14px;
+    }
+
+    body.calendar-only .day-labels {
+      flex: 0 0 auto;
+    }
+
+    body.calendar-only .cal-grid {
+      flex: 1;
+      min-height: 0;
+      grid-auto-rows: minmax(0, 1fr);
+    }
+
+    body.calendar-only .cal-cell {
+      min-height: 0;
+      padding: 5px;
+      overflow: hidden;
+    }
+
+    body.calendar-only .view-shift {
+      min-height: 26px;
+      padding: 4px 3px;
+      font-size: .86rem;
+    }
+
+    body.calendar-only .calendar-only-exit {
+      display: inline-flex;
+      width: auto;
+      min-width: 52px;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 8px 6px 28px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .app-title {
+        font-size: 1rem;
+      }
+
+      .theme-bar,
+      .action-group {
+        width: 100%;
+        justify-content: stretch;
+      }
+
+      .theme-bar {
+        grid-column: auto;
+        grid-row: auto;
+      }
+
+      .action-group {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .btn-action {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 8px;
+        font-size: .9rem;
+      }
+
+      .theme-group {
+        width: 100%;
+        justify-content: center;
+        border-left: 0;
+        padding-left: 0;
+        padding-top: 4px;
+      }
+
+      .legend {
+        gap: 6px;
+      }
+
+      .leg-chip {
+        flex: 1 1 calc(50% - 6px);
+        justify-content: center;
+        background: rgba(255, 255, 255, .055);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+
+      .calendar {
+        border-radius: 12px;
+      }
+
+      .cal-header {
+        padding: 12px 10px;
+        align-items: stretch;
+      }
+
+      .cal-title {
+        width: 100%;
+        font-size: 1.25rem;
+        text-align: center;
+      }
+
+      .nav-group {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .today-btn {
+        min-height: 40px;
+      }
+
+      .nav-btn {
+        width: 42px;
+        height: 42px;
+      }
+
+      .day-lbl {
+        padding: 8px 0;
+        font-size: .78rem;
+      }
+
+      .cal-cell {
+        min-height: 112px;
+        padding: 5px 3px;
+      }
+
+      .day-num {
+        width: 24px;
+        height: 24px;
+        font-size: .84rem;
+        margin-bottom: 2px;
+      }
+
+      .shifts {
+        gap: 3px;
+      }
+
+      .view-shift {
+        min-height: 28px;
+        padding: 4px 2px;
+        font-size: .82rem;
+        gap: 3px;
+      }
+
+      .view-shift.is-swapped {
+        padding: 4px 2px;
+      }
+
+      .swap-old {
+        font-size: .68rem;
+      }
+
+      .swap-new {
+        font-size: .78rem;
+      }
+
+      .swap-badge-idx {
+        font-size: .48rem;
+        padding: 1px 3px;
+      }
+
+      .holiday-label {
+        font-size: .58rem;
+        padding: 1px 3px;
+      }
+
+      .swap-log {
+        overflow-x: auto;
+      }
+
+      .log-table {
+        min-width: 720px;
+      }
+
+      body.calendar-only .calendar-only-exit {
+        width: auto;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .action-group {
+        grid-template-columns: 1fr;
+      }
+
+      .cal-cell {
+        min-height: 96px;
+      }
+
+      .view-shift {
+        font-size: .74rem;
+      }
+
+      .swap-old {
+        display: none;
+      }
+    }
   </style>
 </head>
 
 <body>
-  v3
   <div class="topbar">
     <div class="app-title">
       📋 ระบบเวร
@@ -601,29 +869,35 @@
       <!-- ตำนานจะกูสร้างจาก JS อัตโนมัติ -->
     </div>
     <div class="theme-bar">
-      <a href="qhd.html" class="btn-action" style="background:#1565c0;">📅 ตารางงาน</a>
-      <a href="edit.html" class="btn-action">✏️ ตั้งเวร</a>
-      <a href="addall.html" class="btn-action" style="background:#e65100;">✏️ addall</a>
-      <a href="move.html" class="btn-action" style="background:#00897b;">🔄 แลกเวร</a>
-      <a href="sell.html" class="btn-action" style="background:#e65100;">🏷️ ขายเวร</a>
+      <div class="action-group">
+        <a href="qhd.html" class="btn-action" style="background:#1565c0;">📅 ตารางงาน</a>
+        <a href="edit.html" class="btn-action">✏️ ตั้งเวร</a>
+        <a href="addall.html" class="btn-action" style="background:#6d4c41;">➕ เพิ่มเวร</a>
+        <a href="move.html" class="btn-action" style="background:#00897b;">🔄 แลกเวร</a>
+        <a href="sell.html" class="btn-action" style="background:#e65100;">🏷️ ขายเวร</a>
+        <button id="btnCalendarOnly" type="button" class="btn-action" style="background:#455a64;">🗓️ ปฏิทิน</button>
+        <button onclick="syncFromCloud()" class="btn-action" style="background:#e53935;">
+          🔄 Refresh
+        </button>
+      </div>
 
-      <button onclick="syncFromCloud()" class="btn-action" style="background:#e53935; border:none; cursor:pointer;">
-        🔄 Refresh
-      </button>
-
-      <span class="theme-label" style="margin-left: 8px;">🎨</span>
-      <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic">
-      </div>
-      <div class="swatch" data-theme="paper" style="background:linear-gradient(135deg,#795548,#f0ebe1)" title="Paper">
-      </div>
-      <div class="swatch" data-theme="coffee" style="background:linear-gradient(135deg,#3d2b1f,#1c140d)" title="Coffee">
-      </div>
-      <div class="swatch" data-theme="dark" style="background:linear-gradient(135deg,#1a1a1a,#000000)" title="Dark">
-      </div>
-      <div class="swatch" data-theme="candy" style="background:linear-gradient(135deg,#ff4081,#2d0a1c)" title="Candy">
+      <div class="theme-group">
+        <span class="theme-label">🎨</span>
+        <div class="swatch" data-theme="cosmic" style="background:linear-gradient(135deg,#7c4dff,#0f0c29)" title="Cosmic">
+        </div>
+        <div class="swatch" data-theme="paper" style="background:linear-gradient(135deg,#795548,#f0ebe1)" title="Paper">
+        </div>
+        <div class="swatch" data-theme="coffee" style="background:linear-gradient(135deg,#3d2b1f,#1c140d)" title="Coffee">
+        </div>
+        <div class="swatch" data-theme="dark" style="background:linear-gradient(135deg,#1a1a1a,#000000)" title="Dark">
+        </div>
+        <div class="swatch" data-theme="candy" style="background:linear-gradient(135deg,#ff4081,#2d0a1c)" title="Candy">
+        </div>
       </div>
     </div>
   </div>
+
+  <button id="btnExitCalendarOnly" type="button" class="btn-action calendar-only-exit">ออก</button>
 
   <div class="calendar">
     <div class="cal-header">
@@ -1051,8 +1325,22 @@
 
     // ─── Theme switcher (localStorage) ───────────────────────────────────
     const THEME_MAP = { cosmic: '', paper: 't-paper', candy: 't-candy', coffee: 't-coffee', dark: 't-dark' };
+    const THEME_CLASSES = Object.values(THEME_MAP).filter(Boolean);
     const savedTheme = localStorage.getItem('theme') || '';
-    document.body.className = savedTheme;
+
+    function applyTheme(cls) {
+      document.body.classList.remove(...THEME_CLASSES);
+      if (cls) document.body.classList.add(cls);
+    }
+
+    function setCalendarOnly(on) {
+      document.body.classList.toggle('calendar-only', on);
+      localStorage.setItem('calendarOnly_v1', on ? '1' : '0');
+      const btn = document.getElementById('btnCalendarOnly');
+      if (btn) btn.textContent = on ? '↩️ ปกติ' : '🗓️ ปฏิทิน';
+    }
+
+    applyTheme(savedTheme);
 
     document.querySelectorAll('.swatch').forEach(s => {
       const bodyClass = THEME_MAP[s.dataset.theme] || '';
@@ -1062,7 +1350,7 @@
       }
       s.addEventListener('click', () => {
         const cls = THEME_MAP[s.dataset.theme] || '';
-        document.body.className = cls;
+        applyTheme(cls);
         localStorage.setItem('theme', cls);
         document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
         s.classList.add('active');
@@ -1070,6 +1358,12 @@
     });
 
     // ─── Init ─────────────────────────────────────────────
+    document.getElementById('btnCalendarOnly')?.addEventListener('click', () => {
+      setCalendarOnly(!document.body.classList.contains('calendar-only'));
+    });
+    document.getElementById('btnExitCalendarOnly')?.addEventListener('click', () => setCalendarOnly(false));
+    setCalendarOnly(localStorage.getItem('calendarOnly_v1') === '1');
+
     renderLegend();
     fetchHolidays(); // โหลดวันหยุดก่อน แล้ว buildGrid ข้างในจะเรียกเอง
     renderActivityLog();
