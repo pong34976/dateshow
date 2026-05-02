@@ -586,13 +586,13 @@
 
     /* Swapped chip styling */
     .shift-chip.is-swapped {
-      cursor: default;
+      cursor: pointer;
     }
 
     .shift-chip.is-swapped:hover {
-      filter: none;
-      transform: none;
-      box-shadow: none;
+      filter: brightness(1.25);
+      transform: scale(1.04);
+      box-shadow: 0 3px 12px rgba(0, 0, 0, .35);
     }
 
     .old-name {
@@ -1062,6 +1062,11 @@
         `${THAI_MONTHS[month]} <span>${year + 543}</span>`;
     }
 
+    function getCurrentOwner(dk) {
+      const swapEntry = swapMap[dk];
+      return (swapEntry && swapEntry.requester) || dutyMap[dk] || '';
+    }
+
     function addCell(dayNum, otherMonth, dateObj) {
       const grid = document.getElementById('calGrid');
       const cell = document.createElement('div');
@@ -1093,7 +1098,7 @@
 
         for (let s = 1; s <= slots; s++) {
           const dk = dutyKey(dateStr, key, s);
-          const name = dutyMap[dk] || '';
+          const name = getCurrentOwner(dk);
           if (!name) continue;
 
           const swapEntry = swapMap[dk];
@@ -1103,13 +1108,12 @@
           if (swapEntry) {
             // Already swapped – show old (strikethrough) + new
             chip.classList.add('is-swapped');
-            chip.classList.add('is-dimmed');
             chip.innerHTML = `
               <span class="chip-icon">${icon}</span>
               <span class="chip-name">
                 <span class="old-name">${swapEntry.original}</span>
                 <span class="swap-arrow">→</span>
-                <span class="new-name">${swapEntry.requester}</span>
+                <span class="new-name">${name}</span>
               </span>
               <span class="swap-badge">แลก</span>
             `;
@@ -1160,6 +1164,48 @@
               }
             }
           }
+          if (swapEntry && !otherMonth) {
+            if (swapState.step === 1) {
+              chip.addEventListener('click', () => {
+                swapState.source = { dk, name, dateStr, shift: key, slot: s, dateObj, icon };
+                swapState.step = 2;
+
+                document.getElementById('sdot1').classList.remove('active');
+                document.getElementById('sdot1').classList.add('done');
+                document.getElementById('sdot1').textContent = '✓';
+                document.getElementById('sdot2').classList.add('active');
+
+                const d = new Date(dateStr);
+                const thaiDate = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]}`;
+                document.getElementById('sourceLabel').textContent = `${name} (${key} ${thaiDate})`;
+                document.getElementById('requesterBanner').style.display = 'flex';
+
+                buildGrid(current.getFullYear(), current.getMonth());
+              });
+            } else if (swapState.step === 2) {
+              const isSourceRobinson = swapState.source.shift === 'โรบินสัน';
+              const isTargetRobinson = key === 'โรบินสัน';
+              const isSelf = name === swapState.source.name;
+
+              let isValid = true;
+              if (isSelf) isValid = false;
+              if (isSourceRobinson && !isTargetRobinson) isValid = false;
+              if (!isSourceRobinson && isTargetRobinson) isValid = false;
+
+              if (!isValid) {
+                chip.classList.add('is-dimmed');
+              } else {
+                chip.classList.add('is-highlight');
+                chip.addEventListener('click', () => {
+                  swapState.target = { dk, name, dateStr, shift: key, slot: s, dateObj, icon };
+                  openConfirmModal();
+                });
+              }
+            }
+          } else if (swapEntry && swapState.step === 2) {
+            chip.classList.add('is-dimmed');
+          }
+
           shiftsDiv.appendChild(chip);
         }
       });
